@@ -69,23 +69,25 @@ public class TombstoneEventListener implements Listener
         m_scheduler.scheduleSyncDelayedTask(m_plugin, () ->
         {
             final Block block = getLowestNonSolidBlock(location);
-            if (block == null)
+            if (block != null)
+            {
+                final Collection<ItemStack> excessDroppedItems =
+                        createAndFillChest(playerName, block, lootableItemStacks);
+
+                lootableItemStacks.clear();
+
+                if (!excessDroppedItems.isEmpty())
+                {
+                    final Block excessBlock = block.getRelative(0, 1, 0);
+                    final Collection<ItemStack> remainingItems =
+                            createAndFillChest(playerName, excessBlock, excessDroppedItems);
+
+                    lootableItemStacks.addAll(remainingItems);
+                }
+            }
+            else
             {
                 m_logger.info(String.format("Suitable block not found for %s's chest.", playerName));
-                return;
-            }
-
-            final Collection<ItemStack> excessDroppedItems = createAndFillChest(playerName, block, lootableItemStacks);
-
-            lootableItemStacks.clear();
-
-            if (!excessDroppedItems.isEmpty())
-            {
-                final Block excessBlock = block.getRelative(0, 1, 0);
-                final Collection<ItemStack> remainingItems =
-                        createAndFillChest(playerName, excessBlock, excessDroppedItems);
-
-                lootableItemStacks.addAll(remainingItems);
             }
 
             for (final ItemStack lootableItemStack : lootableItemStacks)
