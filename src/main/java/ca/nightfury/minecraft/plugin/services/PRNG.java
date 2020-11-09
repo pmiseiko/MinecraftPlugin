@@ -1,0 +1,26 @@
+package ca.nightfury.minecraft.plugin.services;
+
+import java.util.Random;
+
+public class PRNG
+{
+    ///////////////////////////////////////////////////////////////////////////
+    // Public Method(s).
+    ///////////////////////////////////////////////////////////////////////////
+
+    public static boolean nextBoolean()
+    {
+        return RANDOM.nextBoolean();
+    }
+
+    public static int nextInt(final int bound)
+    {
+        return RANDOM.nextInt(bound);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Non-Public Field(s).
+    ///////////////////////////////////////////////////////////////////////////
+
+    private final static Random RANDOM = new Random();
+}
