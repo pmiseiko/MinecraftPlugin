@@ -100,7 +100,7 @@ public class ProtectionEventListener implements Listener
                     {
                         m_logger.info(
                                 String.format(
-                                        "Protection removed for %s from block %s in %s at %d/%d/%d",
+                                        "Protection removed from block %s in %s at %d/%d/%d",
                                         protectableBlock.getType(),
                                         protectableBlock.getWorld().getName(),
                                         protectableBlock.getX(),
@@ -121,7 +121,7 @@ public class ProtectionEventListener implements Listener
                         {
                             m_logger.info(
                                     String.format(
-                                            "Ownership collision with attached block %s in %s at %d/%d/%d",
+                                            "Ownership collision with block %s in %s at %d/%d/%d",
                                             protectableBlock.getType(),
                                             protectableBlock.getWorld().getName(),
                                             protectableBlock.getX(),
