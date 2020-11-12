@@ -86,24 +86,29 @@ public class ProtectionEventListener implements Listener
             final Block block = world.getBlockAt(xCoordinate, yCoordinate, zCoordinate);
 
             final Set<Block> protectableBlocks = getAttachedProtectableBlocks(block, Integer.MAX_VALUE);
+            for (final Block protectableBlock : protectableBlocks)
+            {
+                final BlockIdentity protectableBlockIdentity = new BlockIdentity(protectableBlock);
+                blocksChecked.add(protectableBlockIdentity);
+            }
+
             if (protectableBlocks.size() < BLOCK_COUNT_BEFORE_ACTIVATION)
             {
                 for (final Block protectableBlock : protectableBlocks)
                 {
-                    m_logger.info(
-                            String.format(
-                                    "Protection removed from block %s in %s at %d/%d/%d",
-                                    protectableBlock.getType(),
-                                    protectableBlock.getWorld().getName(),
-                                    protectableBlock.getX(),
-                                    protectableBlock.getY(),
-                                    protectableBlock.getZ()));
+                    if (m_blockManager.isBlockOwned(protectableBlock))
+                    {
+                        m_logger.info(
+                                String.format(
+                                        "Protection removed for %s from block %s in %s at %d/%d/%d",
+                                        protectableBlock.getType(),
+                                        protectableBlock.getWorld().getName(),
+                                        protectableBlock.getX(),
+                                        protectableBlock.getY(),
+                                        protectableBlock.getZ()));
 
-                    m_blockManager.unregisterBlockOwner(protectableBlock);
-
-                    final BlockIdentity protectableBlockIdentity = new BlockIdentity(protectableBlock);
-
-                    blocksChecked.add(protectableBlockIdentity);
+                        m_blockManager.unregisterBlockOwner(protectableBlock);
+                    }
                 }
             }
             else
@@ -137,10 +142,6 @@ public class ProtectionEventListener implements Listener
                                         protectableBlock.getY(),
                                         protectableBlock.getZ()));
                     }
-
-                    final BlockIdentity protectableBlockIdentity = new BlockIdentity(protectableBlock);
-
-                    blocksChecked.add(protectableBlockIdentity);
                 }
             }
         }
