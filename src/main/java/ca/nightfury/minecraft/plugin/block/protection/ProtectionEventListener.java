@@ -100,6 +100,10 @@ public class ProtectionEventListener implements Listener
                                     protectableBlock.getZ()));
 
                     m_blockManager.unregisterBlockOwner(protectableBlock);
+
+                    final BlockIdentity protectableBlockIdentity = new BlockIdentity(protectableBlock);
+
+                    blocksChecked.add(protectableBlockIdentity);
                 }
             }
             else
