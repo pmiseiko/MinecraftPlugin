@@ -44,9 +44,14 @@ public class BlockManager
         m_database.deleteBlockOwner(blockIdentity);
     }
 
-    public void unregisterBlockOwner(final Block block, final Player player)
+    public void unregisterBlockOwner(final Block block)
     {
         unregisterBlockOwner(new BlockIdentity(block));
+    }
+
+    public void unregisterBlockOwner(final Block block, final Player player)
+    {
+        unregisterBlockOwner(block);
         m_logger.info(
                 String.format(
                         "%s[%s] unregistered %s at %d/%d/%d",

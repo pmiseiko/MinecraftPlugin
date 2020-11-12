@@ -62,19 +62,6 @@ public class DatabaseManager implements Database, Flushable, Closeable
             final String worldBlockTypeName = worldBlockType.name();
             final String databaseBlockTypeName = getBlockType(blockIdentity);
 
-            if (!Objects.equals(worldBlockTypeName, databaseBlockTypeName))
-            {
-                m_logger.warning(
-                        String.format(
-                                "Database inconsistent in world %s at location %d/%d/%d type %s (world) != %s (database)",
-                                world.getName(),
-                                xCoordinate,
-                                yCoordinate,
-                                zCoordinate,
-                                worldBlockTypeName,
-                                databaseBlockTypeName));
-            }
-
             if (!ProtectedMaterials.isProtectedMaterial(worldBlockType))
             {
                 m_logger.warning(
@@ -85,6 +72,19 @@ public class DatabaseManager implements Database, Flushable, Closeable
                                 yCoordinate,
                                 zCoordinate,
                                 worldBlockTypeName));
+                deleteBlockOwner(blockIdentity);
+            }
+            else if (!Objects.equals(worldBlockTypeName, databaseBlockTypeName))
+            {
+                m_logger.warning(
+                        String.format(
+                                "Database inconsistent in world %s at location %d/%d/%d type %s (world) != %s (database)",
+                                world.getName(),
+                                xCoordinate,
+                                yCoordinate,
+                                zCoordinate,
+                                worldBlockTypeName,
+                                databaseBlockTypeName));
                 deleteBlockOwner(blockIdentity);
             }
         }
