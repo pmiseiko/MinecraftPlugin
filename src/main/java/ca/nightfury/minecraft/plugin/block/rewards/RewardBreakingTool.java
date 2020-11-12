@@ -43,7 +43,7 @@ public enum RewardBreakingTool
 
     public boolean isApplicable(final Material tool)
     {
-        return m_strength.contains(tool);
+        return m_breakingTool.contains(tool);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -52,12 +52,12 @@ public enum RewardBreakingTool
 
     private RewardBreakingTool(final Material... tools)
     {
-        m_strength = Arrays.asList(tools);
+        m_breakingTool = Arrays.asList(tools);
     }
 
     ///////////////////////////////////////////////////////////////////////////
     // Non-Public Field(s).
     ///////////////////////////////////////////////////////////////////////////
 
-    private final List<Material> m_strength;
+    private final List<Material> m_breakingTool;
 }
