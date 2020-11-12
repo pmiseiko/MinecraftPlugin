@@ -109,6 +109,14 @@ public class ProtectionEventListener implements Listener
                 else
                 {
                     m_blockManager.registerBlockOwner(protectableBlock, playerIdentity);
+                    m_logger.info(
+                            String.format(
+                                    "%s registered %s at %d/%d/%d",
+                                    playerIdentity.getUUID(),
+                                    protectableBlock.getType(),
+                                    protectableBlock.getX(),
+                                    protectableBlock.getY(),
+                                    protectableBlock.getZ()));
                 }
 
                 final BlockIdentity protectableBlockIdentity = new BlockIdentity(protectableBlock);
