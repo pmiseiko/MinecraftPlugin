@@ -54,8 +54,11 @@ public class Main extends JavaPlugin
 
             final DatabaseCache databaseCache = new DatabaseCache(databaseManager, m_logger);
             final BlockManager blockManager = new BlockManager(databaseCache, m_logger);
+            final ProtectionEventListener eventListener = new ProtectionEventListener(blockManager, m_logger);
 
-            m_listeners.add(new ProtectionEventListener(blockManager, m_logger));
+            eventListener.integrityCheck(server);
+
+            m_listeners.add(eventListener);
         }
         catch (final SQLException exception)
         {

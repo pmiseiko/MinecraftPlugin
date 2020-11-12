@@ -6,12 +6,16 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
+import java.util.UUID;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -44,6 +48,7 @@ import org.bukkit.event.hanging.HangingPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.plugin.PluginLogger;
 
@@ -59,6 +64,58 @@ public class ProtectionEventListener implements Listener
     {
         m_blockManager = Objects.requireNonNull(blockManager);
         m_logger = Objects.requireNonNull(logger);
+    }
+
+    public void integrityCheck(final Server server)
+    {
+        final Map<BlockIdentity, PlayerIdentity> blockOwners = m_blockManager.getBlockOwners();
+        final Set<BlockIdentity> blocksChecked = new HashSet<>();
+
+        for (final Entry<BlockIdentity, PlayerIdentity> entry : blockOwners.entrySet())
+        {
+            final BlockIdentity blockIdentity = entry.getKey();
+            if (blocksChecked.contains(blockIdentity))
+            {
+                continue;
+            }
+
+            final PlayerIdentity playerIdentity = entry.getValue();
+
+            final UUID worldUUID = blockIdentity.getWorldUUID();
+            final int xCoordinate = blockIdentity.getXCoordinate();
+            final int yCoordinate = blockIdentity.getYCoordinate();
+            final int zCoordinate = blockIdentity.getZCoordinate();
+
+            final World world = server.getWorld(worldUUID);
+            final Block block = world.getBlockAt(xCoordinate, yCoordinate, zCoordinate);
+
+            final Set<Block> protectableBlocks = getProtectableBlocks(block);
+            for (final Block protectableBlock : protectableBlocks)
+            {
+                if (m_blockManager.isBlockOwned(protectableBlock))
+                {
+                    if (!m_blockManager.isBlockOwnedByPlayer(protectableBlock, playerIdentity))
+                    {
+                        m_logger.info(
+                                String.format(
+                                        "Ownership collision with attached block %s in %s at %d/%d/%d",
+                                        protectableBlock.getType(),
+                                        protectableBlock.getWorld().getName(),
+                                        protectableBlock.getX(),
+                                        protectableBlock.getY(),
+                                        protectableBlock.getZ()));
+                    }
+                }
+                else
+                {
+                    m_blockManager.registerBlockOwner(protectableBlock, playerIdentity);
+                }
+
+                final BlockIdentity protectableBlockIdentity = new BlockIdentity(protectableBlock);
+
+                blocksChecked.add(protectableBlockIdentity);
+            }
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -361,24 +418,40 @@ public class ProtectionEventListener implements Listener
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onPlayerTeleportEvent(final PlayerTeleportEvent event)
     {
-        final Player player = event.getPlayer();
-        final Location location = event.getTo();
-        final World world = location.getWorld();
-
-        if (world != null)
+        final TeleportCause cause = event.getCause();
+        switch (cause)
         {
-            final Block block = world.getBlockAt(location);
-            final List<Block> ownedBlocks = getProtectedBlocks(block, BLOCK_PROTECTION_RADIUS);
-
-            for (final Block ownedBlock : ownedBlocks)
+            case CHORUS_FRUIT:
+            case ENDER_PEARL:
+            case NETHER_PORTAL:
             {
-                if (!m_blockManager.isBlockOwnedByPlayer(ownedBlock, player))
+                final Player player = event.getPlayer();
+                final Location location = event.getTo();
+                final World world = location.getWorld();
+
+                if (world == null)
                 {
-                    PrettyMessages.sendMessage(player, "You do not have permission to teleport to that object.");
-                    event.setCancelled(true);
                     break;
                 }
+
+                final Block block = world.getBlockAt(location);
+                final List<Block> ownedBlocks = getProtectedBlocks(block, BLOCK_PROTECTION_RADIUS);
+
+                for (final Block ownedBlock : ownedBlocks)
+                {
+                    if (!m_blockManager.isBlockOwnedByPlayer(ownedBlock, player))
+                    {
+                        PrettyMessages.sendMessage(player, "You do not have permission to teleport to that object.");
+                        event.setCancelled(true);
+                        break;
+                    }
+                }
+
+                break;
             }
+
+            default:
+                break;
         }
     }
 

@@ -1,5 +1,6 @@
 package ca.nightfury.minecraft.plugin.block.protection;
 
+import java.util.Map;
 import java.util.Objects;
 
 import org.bukkit.Location;
@@ -19,9 +20,14 @@ public class BlockManager
         m_logger = Objects.requireNonNull(logger);
     }
 
+    public void registerBlockOwner(final Block block, final PlayerIdentity player)
+    {
+        m_database.createBlockOwner(block, player);
+    }
+
     public void registerBlockOwner(final Block block, final Player player)
     {
-        m_database.createBlockOwner(block, new PlayerIdentity(player));
+        registerBlockOwner(block, new PlayerIdentity(player));
         m_logger.info(
                 String.format(
                         "%s[%s] registered %s at %d/%d/%d",
@@ -33,9 +39,14 @@ public class BlockManager
                         block.getZ()));
     }
 
+    public void unregisterBlockOwner(final BlockIdentity blockIdentity)
+    {
+        m_database.deleteBlockOwner(blockIdentity);
+    }
+
     public void unregisterBlockOwner(final Block block, final Player player)
     {
-        m_database.deleteBlockOwner(new BlockIdentity(block));
+        unregisterBlockOwner(new BlockIdentity(block));
         m_logger.info(
                 String.format(
                         "%s[%s] unregistered %s at %d/%d/%d",
@@ -75,6 +86,16 @@ public class BlockManager
     public boolean isBlockOwnedByPlayer(final Block block, final Player player)
     {
         return isBlockOwnedByPlayer(new BlockIdentity(block), new PlayerIdentity(player));
+    }
+
+    public boolean isBlockOwnedByPlayer(final Block block, final PlayerIdentity playerIdentity)
+    {
+        return isBlockOwnedByPlayer(new BlockIdentity(block), playerIdentity);
+    }
+
+    public Map<BlockIdentity, PlayerIdentity> getBlockOwners()
+    {
+        return m_database.getBlockOwners();
     }
 
     ///////////////////////////////////////////////////////////////////////////
