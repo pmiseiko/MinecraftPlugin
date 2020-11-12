@@ -13,7 +13,6 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
 
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
@@ -46,9 +45,6 @@ import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityEnterBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.plugin.PluginLogger;
 
@@ -96,7 +92,7 @@ public class ProtectionEventListener implements Listener
                 {
                     m_logger.info(
                             String.format(
-                                    "Protection removed for block %s in %s at %d/%d/%d",
+                                    "Protection removed from block %s in %s at %d/%d/%d",
                                     protectableBlock.getType(),
                                     protectableBlock.getWorld().getName(),
                                     protectableBlock.getX(),
@@ -129,9 +125,10 @@ public class ProtectionEventListener implements Listener
                         m_blockManager.registerBlockOwner(protectableBlock, playerIdentity);
                         m_logger.info(
                                 String.format(
-                                        "%s registered %s at %d/%d/%d",
+                                        "Protection added for %s at block %s in %s at %d/%d/%d",
                                         playerIdentity.getUUID(),
                                         protectableBlock.getType(),
+                                        protectableBlock.getWorld().getName(),
                                         protectableBlock.getX(),
                                         protectableBlock.getY(),
                                         protectableBlock.getZ()));
