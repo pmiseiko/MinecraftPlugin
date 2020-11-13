@@ -86,9 +86,14 @@ public class ProtectedMaterials
     {
         switch (material)
         {
+            case BARREL:
+            case BLAST_FURNACE:
             case CHEST:
+            case DISPENSER:
+            case DROPPER:
             case FURNACE:
             case HOPPER:
+            case SMOKER:
 
             case ACACIA_DOOR:
             case ACACIA_TRAPDOOR:
