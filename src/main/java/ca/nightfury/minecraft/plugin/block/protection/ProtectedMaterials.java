@@ -8,80 +8,6 @@ public class ProtectedMaterials
     // Public Method(s).
     ///////////////////////////////////////////////////////////////////////////
 
-    public static boolean isPlayerMovementIntoMaterialProtected(final Material material)
-    {
-        switch (material)
-        {
-            case COAL_BLOCK:
-            case IRON_BLOCK:
-            case LAPIS_BLOCK:
-            case GOLD_BLOCK:
-            case REDSTONE_BLOCK:
-            case DIAMOND_BLOCK:
-            case EMERALD_BLOCK:
-            case QUARTZ_BLOCK:
-            case NETHERITE_BLOCK:
-
-            case BRICKS:
-            case CHISELED_NETHER_BRICKS:
-            case CHISELED_STONE_BRICKS:
-            case CRACKED_NETHER_BRICKS:
-            case CRACKED_POLISHED_BLACKSTONE_BRICKS:
-            case CRACKED_STONE_BRICKS:
-            case END_STONE_BRICKS:
-            case INFESTED_CHISELED_STONE_BRICKS:
-            case INFESTED_CRACKED_STONE_BRICKS:
-            case INFESTED_MOSSY_STONE_BRICKS:
-            case INFESTED_STONE_BRICKS:
-            case MOSSY_STONE_BRICKS:
-            case NETHER_BRICKS:
-            case POLISHED_BLACKSTONE_BRICKS:
-            case PRISMARINE_BRICKS:
-            case QUARTZ_BRICKS:
-            case RED_NETHER_BRICKS:
-            case STONE_BRICKS:
-
-            case GLASS:
-            case GLASS_PANE:
-            case BLACK_STAINED_GLASS:
-            case BLACK_STAINED_GLASS_PANE:
-            case BLUE_STAINED_GLASS:
-            case BLUE_STAINED_GLASS_PANE:
-            case BROWN_STAINED_GLASS:
-            case BROWN_STAINED_GLASS_PANE:
-            case CYAN_STAINED_GLASS:
-            case CYAN_STAINED_GLASS_PANE:
-            case GRAY_STAINED_GLASS:
-            case GRAY_STAINED_GLASS_PANE:
-            case GREEN_STAINED_GLASS:
-            case GREEN_STAINED_GLASS_PANE:
-            case LIGHT_BLUE_STAINED_GLASS:
-            case LIGHT_BLUE_STAINED_GLASS_PANE:
-            case LIGHT_GRAY_STAINED_GLASS:
-            case LIGHT_GRAY_STAINED_GLASS_PANE:
-            case LIME_STAINED_GLASS:
-            case LIME_STAINED_GLASS_PANE:
-            case MAGENTA_STAINED_GLASS:
-            case MAGENTA_STAINED_GLASS_PANE:
-            case ORANGE_STAINED_GLASS:
-            case ORANGE_STAINED_GLASS_PANE:
-            case PINK_STAINED_GLASS:
-            case PINK_STAINED_GLASS_PANE:
-            case PURPLE_STAINED_GLASS:
-            case PURPLE_STAINED_GLASS_PANE:
-            case RED_STAINED_GLASS:
-            case RED_STAINED_GLASS_PANE:
-            case WHITE_STAINED_GLASS:
-            case WHITE_STAINED_GLASS_PANE:
-            case YELLOW_STAINED_GLASS:
-            case YELLOW_STAINED_GLASS_PANE:
-                return true;
-
-            default:
-                return false;
-        }
-    }
-
     public static boolean isProtectedInteractiveMaterial(final Material material)
     {
         switch (material)
@@ -298,8 +224,6 @@ public class ProtectedMaterials
 
     public static boolean isProtectedMaterial(final Material material)
     {
-        return isPlayerMovementIntoMaterialProtected(material) ||
-                isProtectedBuildingMaterial(material) ||
-                isProtectedInteractiveMaterial(material);
+        return isProtectedBuildingMaterial(material) || isProtectedInteractiveMaterial(material);
     }
 }
