@@ -449,17 +449,17 @@ public class ProtectionEventListener implements Listener
                     m_scheduler.scheduleSyncDelayedTask(m_plugin, () ->
                     {
                         final Set<Block> pendingProtectedBlocks = m_playerPendingProtectedBlocks.remove(playerUUID);
-                        if (pendingProtectedBlocks != null && !pendingProtectedBlocks.isEmpty())
+                        if ((pendingProtectedBlocks != null) && !pendingProtectedBlocks.isEmpty())
                         {
                             int count = 0;
-                            for (final Block protectedBlock : m_playerPendingProtectedBlocks.remove(playerUUID))
+                            for (final Block protectedBlock : pendingProtectedBlocks)
                             {
                                 if (m_blockManager.isBlockOwnedByPlayer(protectedBlock, player))
                                 {
                                     count++;
                                 }
                             }
-    
+
                             PrettyMessages.sendMessage(player, String.format("Protected %d block(s).", count));
                         }
 
