@@ -448,16 +448,22 @@ public class ProtectionEventListener implements Listener
                 {
                     m_scheduler.scheduleSyncDelayedTask(m_plugin, () ->
                     {
-                        int count = 0;
-                        for (final Block protectedBlock : m_playerPendingProtectedBlocks.remove(playerUUID))
+                        final Set<Block> pendingProtectedBlocks = m_playerPendingProtectedBlocks.remove(playerUUID);
+                        if (pendingProtectedBlocks != null && !pendingProtectedBlocks.isEmpty())
                         {
-                            if (m_blockManager.isBlockOwnedByPlayer(protectedBlock, player))
+                            int count = 0;
+                            for (final Block protectedBlock : m_playerPendingProtectedBlocks.remove(playerUUID))
                             {
-                                count++;
+                                if (m_blockManager.isBlockOwnedByPlayer(protectedBlock, player))
+                                {
+                                    count++;
+                                }
                             }
+    
+                            PrettyMessages.sendMessage(player, String.format("Protected %d block(s).", count));
                         }
 
-                        PrettyMessages.sendMessage(player, String.format("Protected %d block(s).", count));
+                        m_playerPendingProtectedBlockMessage.remove(playerUUID);
                     }, PLAYER_PROTECTED_BLOCK_MESSAGE_DELAY);
                 }
             }
@@ -729,7 +735,7 @@ public class ProtectionEventListener implements Listener
             BlockFace.WEST,
             BlockFace.UP,
             BlockFace.DOWN);
-    private final static int PLAYER_PROTECTED_BLOCK_MESSAGE_DELAY = 300;
+    private final static int PLAYER_PROTECTED_BLOCK_MESSAGE_DELAY = 200;
     private final Set<UUID> m_playerPendingProtectedBlockMessage = new HashSet<>();
     private final Map<UUID, Set<Block>> m_playerPendingProtectedBlocks = new HashMap<>();
     private final BukkitScheduler m_scheduler;
