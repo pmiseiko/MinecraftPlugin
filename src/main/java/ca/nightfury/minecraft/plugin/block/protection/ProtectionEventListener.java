@@ -3,6 +3,7 @@ package ca.nightfury.minecraft.plugin.block.protection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
@@ -47,6 +49,8 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.plugin.PluginLogger;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
 
 import ca.nightfury.minecraft.plugin.services.PrettyMessages;
 
@@ -56,8 +60,10 @@ public class ProtectionEventListener implements Listener
     // Public Method(s).
     ///////////////////////////////////////////////////////////////////////////
 
-    public ProtectionEventListener(final BlockManager blockManager, final PluginLogger logger)
+    public ProtectionEventListener(final JavaPlugin plugin, final BlockManager blockManager, final PluginLogger logger)
     {
+        m_scheduler = Bukkit.getScheduler();
+        m_plugin = plugin;
         m_blockManager = Objects.requireNonNull(blockManager);
         m_logger = Objects.requireNonNull(logger);
     }
@@ -404,9 +410,10 @@ public class ProtectionEventListener implements Listener
         }
 
         final Set<Block> protectableBlocks = getAttachedProtectableBlocks(block, BLOCK_COUNT_BEFORE_ACTIVATION * 2);
+        final Set<Block> newlyProtectedBlocks = new HashSet<>();
+
         if (protectableBlocks.size() >= BLOCK_COUNT_BEFORE_ACTIVATION)
         {
-            int registeredBlocks = 0;
             for (final Block protectableBlock : protectableBlocks)
             {
                 if (m_blockManager.isBlockOwned(protectableBlock))
@@ -415,19 +422,44 @@ public class ProtectionEventListener implements Listener
                     {
                         m_blockManager.unregisterBlockOwner(protectableBlock, player);
                         m_blockManager.registerBlockOwner(protectableBlock, player);
-                        registeredBlocks++;
+                        newlyProtectedBlocks.add(protectableBlock);
                     }
                 }
                 else
                 {
                     m_blockManager.registerBlockOwner(protectableBlock, player);
-                    registeredBlocks++;
+                    newlyProtectedBlocks.add(protectableBlock);
                 }
             }
 
-            if (registeredBlocks > 0)
+            if (!newlyProtectedBlocks.isEmpty())
             {
-                PrettyMessages.sendMessage(player, String.format("Protected %d block(s).", registeredBlocks));
+                final UUID playerUUID = player.getUniqueId();
+                if (m_playerPendingProtectedBlocks.containsKey(playerUUID))
+                {
+                    m_playerPendingProtectedBlocks.get(playerUUID).addAll(newlyProtectedBlocks);
+                }
+                else
+                {
+                    m_playerPendingProtectedBlocks.put(playerUUID, newlyProtectedBlocks);
+                }
+
+                if (!m_playerPendingProtectedBlockMessage.contains(playerUUID))
+                {
+                    m_scheduler.scheduleSyncDelayedTask(m_plugin, () ->
+                    {
+                        int count = 0;
+                        for (final Block protectedBlock : m_playerPendingProtectedBlocks.remove(playerUUID))
+                        {
+                            if (m_blockManager.isBlockOwnedByPlayer(protectedBlock, player))
+                            {
+                                count++;
+                            }
+                        }
+
+                        PrettyMessages.sendMessage(player, String.format("Protected %d block(s).", count));
+                    }, PLAYER_PROTECTED_BLOCK_MESSAGE_DELAY);
+                }
             }
         }
     }
@@ -697,6 +729,11 @@ public class ProtectionEventListener implements Listener
             BlockFace.WEST,
             BlockFace.UP,
             BlockFace.DOWN);
+    private final static int PLAYER_PROTECTED_BLOCK_MESSAGE_DELAY = 300;
+    private final Set<UUID> m_playerPendingProtectedBlockMessage = new HashSet<>();
+    private final Map<UUID, Set<Block>> m_playerPendingProtectedBlocks = new HashMap<>();
+    private final BukkitScheduler m_scheduler;
+    private final JavaPlugin m_plugin;
     private final BlockManager m_blockManager;
     private final PluginLogger m_logger;
 }

@@ -54,7 +54,7 @@ public class Main extends JavaPlugin
 
             final DatabaseCache databaseCache = new DatabaseCache(databaseManager, m_logger);
             final BlockManager blockManager = new BlockManager(databaseCache, m_logger);
-            final ProtectionEventListener eventListener = new ProtectionEventListener(blockManager, m_logger);
+            final ProtectionEventListener eventListener = new ProtectionEventListener(this, blockManager, m_logger);
 
             eventListener.integrityCheck(server);
 

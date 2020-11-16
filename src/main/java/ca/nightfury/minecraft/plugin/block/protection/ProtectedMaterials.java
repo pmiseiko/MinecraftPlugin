@@ -63,6 +63,9 @@ public class ProtectedMaterials
             case SPRUCE_PRESSURE_PLATE:
             case STONE_PRESSURE_PLATE:
             case WARPED_PRESSURE_PLATE:
+
+            case LEVER:
+            case REPEATER:
                 return true;
 
             default:
@@ -74,6 +77,16 @@ public class ProtectedMaterials
     {
         switch (material)
         {
+            case CAMPFIRE:
+            case REDSTONE_LAMP:
+            case REDSTONE_TORCH:
+            case REDSTONE_WALL_TORCH:
+            case REDSTONE_WIRE:
+            case SOUL_CAMPFIRE:
+            case SOUL_LANTERN:
+            case TORCH:
+            case LANTERN:
+
             case COAL_BLOCK:
             case IRON_BLOCK:
             case LAPIS_BLOCK:
@@ -215,6 +228,16 @@ public class ProtectedMaterials
             case WHITE_STAINED_GLASS_PANE:
             case YELLOW_STAINED_GLASS:
             case YELLOW_STAINED_GLASS_PANE:
+
+            case CHISELED_POLISHED_BLACKSTONE:
+            case CHISELED_QUARTZ_BLOCK:
+            case CHISELED_RED_SANDSTONE:
+            case CHISELED_SANDSTONE:
+            case POLISHED_ANDESITE:
+            case POLISHED_BASALT:
+            case POLISHED_BLACKSTONE:
+            case POLISHED_DIORITE:
+            case POLISHED_GRANITE:
                 return true;
 
             default:

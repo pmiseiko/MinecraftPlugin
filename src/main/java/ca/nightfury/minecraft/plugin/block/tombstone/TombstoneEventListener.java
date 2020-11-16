@@ -92,7 +92,7 @@ public class TombstoneEventListener implements Listener
 
             for (final ItemStack lootableItemStack : lootableItemStacks)
             {
-                location.getWorld().dropItemNaturally(location, lootableItemStack);
+                location.getWorld().dropItem(location, lootableItemStack);
             }
         }, CREATE_AND_FILL_CHEST_TICK_DELAY);
     }
