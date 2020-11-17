@@ -46,6 +46,7 @@ import org.bukkit.event.entity.EntityBreakDoorEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityEnterBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.EntityInteractEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.plugin.PluginLogger;
@@ -521,6 +522,16 @@ public class ProtectionEventListener implements Listener
                 event.setCancelled(true);
                 break;
             }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    public void onEntityInteractEvent(final EntityInteractEvent event)
+    {
+        final Block block = event.getBlock();
+        if (m_blockManager.isBlockOwned(block))
+        {
+            event.setCancelled(true);
         }
     }
 
