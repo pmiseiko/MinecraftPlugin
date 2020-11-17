@@ -444,28 +444,33 @@ public class ProtectionEventListener implements Listener
                     m_playerPendingProtectedBlocks.put(playerUUID, newlyProtectedBlocks);
                 }
 
-                if (!m_playerPendingProtectedBlockMessage.contains(playerUUID))
+                if (m_playerPendingProtectedBlockMessage.containsKey(playerUUID))
                 {
-                    m_scheduler.scheduleSyncDelayedTask(m_plugin, () ->
-                    {
-                        final Set<Block> pendingProtectedBlocks = m_playerPendingProtectedBlocks.remove(playerUUID);
-                        if ((pendingProtectedBlocks != null) && !pendingProtectedBlocks.isEmpty())
-                        {
-                            int count = 0;
-                            for (final Block protectedBlock : pendingProtectedBlocks)
-                            {
-                                if (m_blockManager.isBlockOwnedByPlayer(protectedBlock, player))
-                                {
-                                    count++;
-                                }
-                            }
+                    final int previousTaskID = m_playerPendingProtectedBlockMessage.get(playerUUID);
+                    m_scheduler.cancelTask(previousTaskID);
+                }
 
-                            PrettyMessages.sendMessage(player, String.format("Protected %d block(s).", count));
+                final int taskID = m_scheduler.scheduleSyncDelayedTask(m_plugin, () ->
+                {
+                    final Set<Block> pendingProtectedBlocks = m_playerPendingProtectedBlocks.remove(playerUUID);
+                    if ((pendingProtectedBlocks != null) && !pendingProtectedBlocks.isEmpty())
+                    {
+                        int count = 0;
+                        for (final Block protectedBlock : pendingProtectedBlocks)
+                        {
+                            if (m_blockManager.isBlockOwnedByPlayer(protectedBlock, player))
+                            {
+                                count++;
+                            }
                         }
 
-                        m_playerPendingProtectedBlockMessage.remove(playerUUID);
-                    }, PLAYER_PROTECTED_BLOCK_MESSAGE_DELAY);
-                }
+                        PrettyMessages.sendMessage(player, String.format("Protected %d block(s).", count));
+                    }
+
+                    m_playerPendingProtectedBlockMessage.remove(playerUUID);
+                }, PLAYER_PROTECTED_BLOCK_MESSAGE_DELAY);
+
+                m_playerPendingProtectedBlockMessage.put(playerUUID, taskID);
             }
         }
     }
@@ -566,6 +571,7 @@ public class ProtectionEventListener implements Listener
                 break;
             }
 
+            case PHYSICAL:
             case RIGHT_CLICK_BLOCK:
             {
                 final Block clickedBlock = event.getClickedBlock();
@@ -735,8 +741,8 @@ public class ProtectionEventListener implements Listener
             BlockFace.WEST,
             BlockFace.UP,
             BlockFace.DOWN);
-    private final static int PLAYER_PROTECTED_BLOCK_MESSAGE_DELAY = 200;
-    private final Set<UUID> m_playerPendingProtectedBlockMessage = new HashSet<>();
+    private final static int PLAYER_PROTECTED_BLOCK_MESSAGE_DELAY = 100;
+    private final Map<UUID, Integer> m_playerPendingProtectedBlockMessage = new HashMap<>();
     private final Map<UUID, Set<Block>> m_playerPendingProtectedBlocks = new HashMap<>();
     private final BukkitScheduler m_scheduler;
     private final JavaPlugin m_plugin;
