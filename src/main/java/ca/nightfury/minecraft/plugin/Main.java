@@ -67,7 +67,7 @@ public class Main extends JavaPlugin
 
         m_listeners.add(new AutoReplaceEventListener(m_logger));
         m_listeners.add(new RewardEventListener(m_logger));
-        m_listeners.add(new TombstoneEventListener(this, m_logger));
+        // m_listeners.add(new TombstoneEventListener(this, m_logger));
         m_listeners.add(new SquidEventListener());
 
         final Server server = getServer();
