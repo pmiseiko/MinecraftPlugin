@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerItemBreakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -27,7 +28,18 @@ public class AutoReplaceEventListener implements Listener
     // Listener Override(s).
     ///////////////////////////////////////////////////////////////////////////
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+    public void onBlockPlaceEvent(final BlockPlaceEvent event)
+    {
+        final Player player = event.getPlayer();
+        final String playerName = player.getDisplayName();
+        final ItemStack mainHandItem = event.getItemInHand();
+        final Material mainHandItemType = mainHandItem.getType();
+
+        m_logger.info(String.format("%s placed %s with %d left", playerName, mainHandItemType, mainHandItem.getAmount()));
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onPlayerItemBreakEvent(final PlayerItemBreakEvent event)
     {
         final ItemStack brokenItem = event.getBrokenItem();
