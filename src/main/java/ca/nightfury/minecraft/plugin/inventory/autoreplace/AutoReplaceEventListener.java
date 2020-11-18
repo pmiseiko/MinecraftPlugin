@@ -32,41 +32,47 @@ public class AutoReplaceEventListener implements Listener
     public void onBlockPlaceEvent(final BlockPlaceEvent event)
     {
         final Player player = event.getPlayer();
-        final PlayerInventory inventory = player.getInventory();
+        final PlayerInventory playerInventory = player.getInventory();
         final ItemStack mainHandItem = event.getItemInHand();
         final int mainHandItemAmount = mainHandItem.getAmount();
 
         if (mainHandItemAmount == 1)
         {
             final String playerName = player.getDisplayName();
+            final int playerHeldItemSlot = playerInventory.getHeldItemSlot();
             final Material mainHandItemType = mainHandItem.getType();
 
             m_logger.info(String.format("%s exhausted their main hand item %s", playerName, mainHandItemType));
 
-            for (int itemIndex = 0; itemIndex < inventory.getSize(); itemIndex++)
+            for (int inventoryItemIndex = 0; inventoryItemIndex < playerInventory.getSize(); inventoryItemIndex++)
             {
-                final ItemStack inventoryItem = inventory.getItem(itemIndex);
-                if ((inventoryItem == null) || Objects.equals(mainHandItem, inventoryItem))
+                if (inventoryItemIndex == playerHeldItemSlot)
                 {
                     continue;
                 }
 
-                final Material itemType = inventoryItem.getType();
+                final ItemStack inventoryItem = playerInventory.getItem(inventoryItemIndex);
+                if (inventoryItem == null)
+                {
+                    continue;
+                }
+
+                final Material inventoryItemType = inventoryItem.getType();
                 final int inventoryItemAmount = inventoryItem.getAmount();
 
-                if (Objects.equals(mainHandItemType, itemType))
+                if (Objects.equals(mainHandItemType, inventoryItemType))
                 {
                     m_logger.info(
                             String.format(
                                     "Auto replaced %s[%d] with %s[%d] from inventory for %s",
                                     mainHandItemType,
                                     mainHandItemAmount,
-                                    itemType,
+                                    inventoryItemType,
                                     inventoryItemAmount,
                                     playerName));
 
-                    inventory.setItemInMainHand(inventoryItem);
-                    inventory.setItem(itemIndex, null);
+                    playerInventory.setItemInMainHand(inventoryItem);
+                    playerInventory.setItem(inventoryItemIndex, null);
                     return;
                 }
             }
@@ -85,8 +91,8 @@ public class AutoReplaceEventListener implements Listener
     {
         final ItemStack brokenItem = event.getBrokenItem();
         final Player player = event.getPlayer();
-        final PlayerInventory inventory = player.getInventory();
-        final ItemStack mainHandItem = inventory.getItemInMainHand();
+        final PlayerInventory playerInventory = player.getInventory();
+        final ItemStack mainHandItem = playerInventory.getItemInMainHand();
 
         if (Objects.equals(brokenItem, mainHandItem))
         {
@@ -95,26 +101,26 @@ public class AutoReplaceEventListener implements Listener
 
             m_logger.info(String.format("%s broke their main hand item %s", playerName, mainHandItemType));
 
-            for (int itemIndex = 0; itemIndex < inventory.getSize(); itemIndex++)
+            for (int inventoryItemIndex = 0; inventoryItemIndex < playerInventory.getSize(); inventoryItemIndex++)
             {
-                final ItemStack inventoryItem = inventory.getItem(itemIndex);
+                final ItemStack inventoryItem = playerInventory.getItem(inventoryItemIndex);
                 if ((inventoryItem == null) || Objects.equals(brokenItem, inventoryItem))
                 {
                     continue;
                 }
 
-                final Material itemType = inventoryItem.getType();
-                if (Objects.equals(mainHandItemType, itemType))
+                final Material inventoryItemType = inventoryItem.getType();
+                if (Objects.equals(mainHandItemType, inventoryItemType))
                 {
                     m_logger.info(
                             String.format(
                                     "Auto replaced %s with %s from inventory for %s",
                                     mainHandItemType,
-                                    itemType,
+                                    inventoryItemType,
                                     playerName));
 
-                    inventory.setItemInMainHand(inventoryItem);
-                    inventory.setItem(itemIndex, null);
+                    playerInventory.setItemInMainHand(inventoryItem);
+                    playerInventory.setItem(inventoryItemIndex, null);
                     return;
                 }
             }
