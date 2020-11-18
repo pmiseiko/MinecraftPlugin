@@ -602,22 +602,6 @@ public class ProtectionEventListener implements Listener
                 final Player player = event.getPlayer();
                 if (!m_blockManager.isBlockOwnedByPlayer(clickedBlock, player))
                 {
-                    final List<Block> protectedBlocks = getProtectedBlocks(clickedBlock, 1);
-                    for (final Block protectedBlock : protectedBlocks)
-                    {
-                        final BlockState protectedBlockData = protectedBlock.getState();
-                        if (protectedBlockData instanceof Sign)
-                        {
-                            final Sign sign = (Sign) protectedBlockData;
-                            m_logger.info(sign.getLine(0));
-                            final String header = sign.getLine(0);
-                            if ("Community".equalsIgnoreCase(header))
-                            {
-                                m_logger.info("Found \"Community\" sign.");
-                            }
-                        }
-                    }
-
                     PrettyMessages.sendMessage(player, "You do not have permission to interact with that object.");
                     event.setCancelled(true);
                     break;
