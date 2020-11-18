@@ -32,11 +32,52 @@ public class AutoReplaceEventListener implements Listener
     public void onBlockPlaceEvent(final BlockPlaceEvent event)
     {
         final Player player = event.getPlayer();
-        final String playerName = player.getDisplayName();
+        final PlayerInventory inventory = player.getInventory();
         final ItemStack mainHandItem = event.getItemInHand();
-        final Material mainHandItemType = mainHandItem.getType();
+        final int mainHandItemAmount = mainHandItem.getAmount();
 
-        m_logger.info(String.format("%s placed %s with %d left", playerName, mainHandItemType, mainHandItem.getAmount()));
+        if (mainHandItemAmount == 1)
+        {
+            final String playerName = player.getDisplayName();
+            final Material mainHandItemType = mainHandItem.getType();
+
+            m_logger.info(String.format("%s exhausted their main hand item %s", playerName, mainHandItemType));
+
+            for (int itemIndex = 0; itemIndex < inventory.getSize(); itemIndex++)
+            {
+                final ItemStack inventoryItem = inventory.getItem(itemIndex);
+                if ((inventoryItem == null) || Objects.equals(mainHandItem, inventoryItem))
+                {
+                    continue;
+                }
+
+                final Material itemType = inventoryItem.getType();
+                final int inventoryItemAmount = inventoryItem.getAmount();
+
+                if (Objects.equals(mainHandItemType, itemType))
+                {
+                    m_logger.info(
+                            String.format(
+                                    "Auto replaced %s[%d] with %s[%d] from inventory for %s",
+                                    mainHandItemType,
+                                    mainHandItemAmount,
+                                    itemType,
+                                    inventoryItemAmount,
+                                    playerName));
+
+                    inventory.setItemInMainHand(inventoryItem);
+                    inventory.setItem(itemIndex, null);
+                    return;
+                }
+            }
+
+            m_logger.info(
+                    String.format(
+                            "%s had no replacement for %s[%d]",
+                            playerName,
+                            mainHandItemType,
+                            mainHandItemAmount));
+        }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)

@@ -609,6 +609,7 @@ public class ProtectionEventListener implements Listener
                         if (protectedBlockData instanceof Sign)
                         {
                             final Sign sign = (Sign) protectedBlockData;
+                            m_logger.info(sign.getLine(0));
                             final String header = sign.getLine(0);
                             if ("Community".equalsIgnoreCase(header))
                             {
