@@ -64,9 +64,8 @@ public class AutoReplaceEventListener implements Listener
                 {
                     m_logger.info(
                             String.format(
-                                    "Auto replaced %s[%d] with %s[%d] from inventory for %s",
+                                    "Auto replaced %s with %s[%d] from inventory for %s",
                                     mainHandItemType,
-                                    mainHandItemAmount,
                                     inventoryItemType,
                                     inventoryItemAmount,
                                     playerName));
@@ -77,12 +76,7 @@ public class AutoReplaceEventListener implements Listener
                 }
             }
 
-            m_logger.info(
-                    String.format(
-                            "%s had no replacement for %s[%d]",
-                            playerName,
-                            mainHandItemType,
-                            mainHandItemAmount));
+            m_logger.info(String.format("%s had no replacement for %s", playerName, mainHandItemType));
         }
     }
 
@@ -97,14 +91,20 @@ public class AutoReplaceEventListener implements Listener
         if (Objects.equals(brokenItem, mainHandItem))
         {
             final String playerName = player.getDisplayName();
+            final int playerHeldItemSlot = playerInventory.getHeldItemSlot();
             final Material mainHandItemType = mainHandItem.getType();
 
             m_logger.info(String.format("%s broke their main hand item %s", playerName, mainHandItemType));
 
             for (int inventoryItemIndex = 0; inventoryItemIndex < playerInventory.getSize(); inventoryItemIndex++)
             {
+                if (inventoryItemIndex == playerHeldItemSlot)
+                {
+                    continue;
+                }
+
                 final ItemStack inventoryItem = playerInventory.getItem(inventoryItemIndex);
-                if ((inventoryItem == null) || Objects.equals(brokenItem, inventoryItem))
+                if (inventoryItem == null)
                 {
                     continue;
                 }
