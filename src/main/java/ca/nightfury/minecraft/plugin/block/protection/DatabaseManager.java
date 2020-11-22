@@ -59,7 +59,7 @@ public class DatabaseManager implements Database, Flushable, Closeable
 
             final World world = server.getWorld(worldUUID);
             final Environment worldEnvironment = world.getEnvironment();
-            final String worldName = server.getName();
+            final String worldName = world.getName();
             final Block worldBlock = world.getBlockAt(xCoordinate, yCoordinate, zCoordinate);
             final Material worldBlockType = worldBlock.getType();
             final String worldBlockTypeName = worldBlockType.name();
