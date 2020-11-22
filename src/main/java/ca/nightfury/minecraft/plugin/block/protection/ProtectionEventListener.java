@@ -21,6 +21,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.Sign;
 import org.bukkit.block.data.Bisected.Half;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
@@ -601,6 +602,36 @@ public class ProtectionEventListener implements Listener
                 final Player player = event.getPlayer();
                 if (!m_blockManager.isBlockOwnedByPlayer(clickedBlock, player))
                 {
+                    final List<Block> protectedBlocks = getProtectedBlocks(clickedBlock, 1);
+                    for (final Block protectedBlock : protectedBlocks)
+                    {
+                        final BlockState protectedBlockData = protectedBlock.getState();
+                        if (protectedBlockData instanceof Sign)
+                        {
+                            final Sign sign = (Sign) protectedBlockData;
+                            final String header = sign.getLine(0).trim().toLowerCase();
+
+                            if ("community".equals(header) || "public".equals(header))
+                            {
+                                final String playerName = player.getDisplayName();
+                                final World world = clickedBlock.getWorld();
+                                final String worldName = world.getName();
+
+                                m_logger.info(
+                                        String.format(
+                                                "%s interacted with public protected block %s in %s at %d/%d/%d",
+                                                playerName,
+                                                clickedBlockType,
+                                                worldName,
+                                                clickedBlock.getX(),
+                                                clickedBlock.getY(),
+                                                clickedBlock.getZ()));
+
+                                return;
+                            }
+                        }
+                    }
+
                     PrettyMessages.sendMessage(player, "You do not have permission to interact with that object.");
                     event.setCancelled(true);
                     break;

@@ -20,6 +20,7 @@ import java.util.logging.Level;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
+import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.plugin.PluginLogger;
 
@@ -57,33 +58,47 @@ public class DatabaseManager implements Database, Flushable, Closeable
             final int zCoordinate = blockIdentity.getZCoordinate();
 
             final World world = server.getWorld(worldUUID);
-            final Block block = world.getBlockAt(xCoordinate, yCoordinate, zCoordinate);
-            final Material worldBlockType = block.getType();
+            final Environment worldEnvironment = world.getEnvironment();
+            final String worldName = server.getName();
+            final Block worldBlock = world.getBlockAt(xCoordinate, yCoordinate, zCoordinate);
+            final Material worldBlockType = worldBlock.getType();
             final String worldBlockTypeName = worldBlockType.name();
             final String databaseBlockTypeName = getBlockType(blockIdentity);
 
-            if (!ProtectedMaterials.isProtectedMaterial(worldBlockType))
+            if (!Objects.equals(worldEnvironment, Environment.NORMAL))
             {
                 m_logger.warning(
                         String.format(
-                                "Incorrect block protected in world %s at location %d/%d/%d type %s",
-                                world.getName(),
+                                "World protection disabled for block %s in %s at %d/%d/%d",
+                                worldBlockType,
+                                worldName,
                                 xCoordinate,
                                 yCoordinate,
-                                zCoordinate,
-                                worldBlockTypeName));
+                                zCoordinate));
+                deleteBlockOwner(blockIdentity);
+            }
+            else if (!ProtectedMaterials.isProtectedMaterial(worldBlockType))
+            {
+                m_logger.warning(
+                        String.format(
+                                "Invalid block %s protected in %s at %d/%d/%d",
+                                worldBlockType,
+                                worldName,
+                                xCoordinate,
+                                yCoordinate,
+                                zCoordinate));
                 deleteBlockOwner(blockIdentity);
             }
             else if (!Objects.equals(worldBlockTypeName, databaseBlockTypeName))
             {
                 m_logger.warning(
                         String.format(
-                                "Database inconsistent in world %s at location %d/%d/%d type %s (world) != %s (database)",
-                                world.getName(),
+                                "Database inconsistent in %s at %d/%d/%d world block %s != database block %s",
+                                worldName,
                                 xCoordinate,
                                 yCoordinate,
                                 zCoordinate,
-                                worldBlockTypeName,
+                                worldBlockType,
                                 databaseBlockTypeName));
                 deleteBlockOwner(blockIdentity);
             }
