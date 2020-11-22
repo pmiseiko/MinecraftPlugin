@@ -18,6 +18,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
+import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
@@ -381,8 +382,15 @@ public class ProtectionEventListener implements Listener
     public void onBlockPlaceEvent(final BlockPlaceEvent event)
     {
         final Block block = event.getBlockPlaced();
-        final Material blockType = block.getType();
+        final World world = block.getWorld();
+        final Environment worldEnvironment = world.getEnvironment();
 
+        if (!Objects.equals(worldEnvironment, Environment.NORMAL))
+        {
+            return;
+        }
+
+        final Material blockType = block.getType();
         if (!ProtectedMaterials.isProtectedMaterial(blockType))
         {
             return;
