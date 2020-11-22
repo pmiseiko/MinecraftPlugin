@@ -27,4 +27,14 @@ public class NewsEventListener implements Listener
                 player,
                 "permission to interact with near by protected objects.");
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Object Override(s).
+    ///////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public String toString()
+    {
+        return getClass().getSimpleName();
+    }
 }
