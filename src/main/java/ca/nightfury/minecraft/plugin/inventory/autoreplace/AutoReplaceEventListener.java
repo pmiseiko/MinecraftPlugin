@@ -7,7 +7,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerItemBreakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -27,58 +26,6 @@ public class AutoReplaceEventListener implements Listener
     ///////////////////////////////////////////////////////////////////////////
     // Listener Override(s).
     ///////////////////////////////////////////////////////////////////////////
-
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
-    public void onBlockPlaceEvent(final BlockPlaceEvent event)
-    {
-        final Player player = event.getPlayer();
-        final PlayerInventory playerInventory = player.getInventory();
-        final ItemStack mainHandItem = event.getItemInHand();
-        final int mainHandItemAmount = mainHandItem.getAmount();
-
-        if (mainHandItemAmount == 1)
-        {
-            final String playerName = player.getDisplayName();
-            final int playerHeldItemSlot = playerInventory.getHeldItemSlot();
-            final Material mainHandItemType = mainHandItem.getType();
-
-            m_logger.info(String.format("%s exhausted their main hand item %s", playerName, mainHandItemType));
-
-            for (int inventoryItemIndex = 0; inventoryItemIndex < playerInventory.getSize(); inventoryItemIndex++)
-            {
-                if (inventoryItemIndex == playerHeldItemSlot)
-                {
-                    continue;
-                }
-
-                final ItemStack inventoryItem = playerInventory.getItem(inventoryItemIndex);
-                if (inventoryItem == null)
-                {
-                    continue;
-                }
-
-                final Material inventoryItemType = inventoryItem.getType();
-                final int inventoryItemAmount = inventoryItem.getAmount();
-
-                if (Objects.equals(mainHandItemType, inventoryItemType))
-                {
-                    m_logger.info(
-                            String.format(
-                                    "Auto replaced %s with %s[%d] from inventory for %s",
-                                    mainHandItemType,
-                                    inventoryItemType,
-                                    inventoryItemAmount,
-                                    playerName));
-
-                    playerInventory.setItemInMainHand(inventoryItem);
-                    playerInventory.setItem(inventoryItemIndex, null);
-                    return;
-                }
-            }
-
-            m_logger.info(String.format("%s had no replacement for %s", playerName, mainHandItemType));
-        }
-    }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onPlayerItemBreakEvent(final PlayerItemBreakEvent event)

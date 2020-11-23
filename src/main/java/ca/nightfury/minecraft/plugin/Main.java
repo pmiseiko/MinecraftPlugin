@@ -21,6 +21,7 @@ import ca.nightfury.minecraft.plugin.block.protection.DatabaseCache;
 import ca.nightfury.minecraft.plugin.block.protection.DatabaseManager;
 import ca.nightfury.minecraft.plugin.block.protection.ProtectionEventListener;
 import ca.nightfury.minecraft.plugin.block.rewards.RewardEventListener;
+import ca.nightfury.minecraft.plugin.block.tombstone.TombstoneEventListener;
 import ca.nightfury.minecraft.plugin.entity.squids.SquidEventListener;
 import ca.nightfury.minecraft.plugin.inventory.autoreplace.AutoReplaceEventListener;
 import ca.nightfury.minecraft.plugin.news.NewsEventListener;
@@ -69,7 +70,7 @@ public class Main extends JavaPlugin
         m_listeners.add(new NewsEventListener());
         m_listeners.add(new RewardEventListener(m_logger));
         m_listeners.add(new SquidEventListener());
-        // m_listeners.add(new TombstoneEventListener(this, m_logger));
+        m_listeners.add(new TombstoneEventListener(m_logger));
 
         final Server server = getServer();
         final PluginManager pluginManager = server.getPluginManager();
