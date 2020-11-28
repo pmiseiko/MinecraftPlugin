@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -67,8 +68,12 @@ public class TombstoneEventListener implements Listener
                 final StringBuilder enchantmentsStringBuilder = new StringBuilder();
                 for (final Enchantment enchantment : enchantments.keySet())
                 {
-                    enchantmentsStringBuilder.append(" ");
-                    enchantmentsStringBuilder.append(enchantment.getKey());
+                    final NamespacedKey namespacedKey = enchantment.getKey();
+                    final String enchantmentName = namespacedKey.getKey();
+
+                    enchantmentsStringBuilder.append(" [enchantment:");
+                    enchantmentsStringBuilder.append(enchantmentName);
+                    enchantmentsStringBuilder.append("]");
                 }
 
                 final String enchantmentsString = enchantmentsStringBuilder.toString();
