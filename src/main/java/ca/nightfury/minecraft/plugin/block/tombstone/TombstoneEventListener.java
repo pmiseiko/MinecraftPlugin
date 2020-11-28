@@ -1,9 +1,11 @@
 package ca.nightfury.minecraft.plugin.block.tombstone;
 
 import java.util.Collection;
+import java.util.Map;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -54,8 +56,31 @@ public class TombstoneEventListener implements Listener
         {
             final Material itemStackType = itemStack.getType();
             final int itemStackAmount = itemStack.getAmount();
+            final Map<Enchantment, Integer> enchantments = itemStack.getEnchantments();
 
-            m_logger.info(String.format("%s dropped %s[%d]", playerName, itemStackType, itemStackAmount));
+            if (enchantments.isEmpty())
+            {
+                m_logger.info(String.format("%s dropped %s[%d]", playerName, itemStackType, itemStackAmount));
+            }
+            else
+            {
+                final StringBuilder enchantmentsStringBuilder = new StringBuilder();
+                for (final Enchantment enchantment : enchantments.keySet())
+                {
+                    enchantmentsStringBuilder.append(" ");
+                    enchantmentsStringBuilder.append(enchantment.getKey());
+                }
+
+                final String enchantmentsString = enchantmentsStringBuilder.toString();
+
+                m_logger.info(
+                        String.format(
+                                "%s dropped %s[%d]%s",
+                                playerName,
+                                itemStackType,
+                                itemStackAmount,
+                                enchantmentsString));
+            }
         }
     }
 
