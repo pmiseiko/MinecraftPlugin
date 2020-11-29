@@ -1,6 +1,8 @@
 package ca.nightfury.minecraft.plugin.block.rewards;
 
+import java.io.File;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -17,6 +19,11 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.PluginLogger;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
+
+import ca.nightfury.minecraft.plugin.block.protection.BlockIdentity;
+import ca.nightfury.minecraft.plugin.block.protection.BlockIdentitySerializer;
 
 public class RewardEventListener implements Listener
 {
@@ -24,8 +31,13 @@ public class RewardEventListener implements Listener
     // Public Method(s).
     ///////////////////////////////////////////////////////////////////////////
 
-    public RewardEventListener(final PluginLogger logger)
+    public RewardEventListener(final File dataFolder, final PluginLogger logger)
     {
+        final File dbFile = new File(dataFolder, DATABASE_FILE_NAME);
+        final DB db =
+                DBMaker.fileDB(dbFile).closeOnJvmShutdown().concurrencyDisable().fileMmapEnableIfSupported().make();
+
+        m_blockHistory = db.hashSet("BlockHistory", BlockIdentitySerializer.SINGLETON).createOrOpen();
         m_logger = logger;
     }
 
@@ -37,9 +49,18 @@ public class RewardEventListener implements Listener
     public void onBlockBreakEvent(final BlockBreakEvent event)
     {
         final Block block = event.getBlock();
+        final BlockIdentity blockIdentity = new BlockIdentity(block);
+
+        if (m_blockHistory.contains(blockIdentity))
+        {
+            return;
+        }
+
+        m_blockHistory.add(blockIdentity);
+
+        final Location location = block.getLocation();
         final World world = block.getWorld();
         final Biome biome = block.getBiome();
-        final Location location = block.getLocation();
         final Player player = event.getPlayer();
         final PlayerInventory playerInventory = player.getInventory();
         final ItemStack playerItemInMainHand = playerInventory.getItemInMainHand();
@@ -64,7 +85,12 @@ public class RewardEventListener implements Listener
 
                 m_logger.log(
                         Level.INFO,
-                        String.format("%s[%s] was rewarded with %s %d", playerName, playerID, itemType, itemAmount));
+                        String.format(
+                                "%s[%s] was rewarded with %s %d",
+                                playerName,
+                                playerID,
+                                itemType,
+                                itemAmount));
             }
         }
     }
@@ -83,5 +109,7 @@ public class RewardEventListener implements Listener
     // Non-Public Field(s).
     ///////////////////////////////////////////////////////////////////////////
 
+    private final static String DATABASE_FILE_NAME = "rewards.db";
+    private final Set<BlockIdentity> m_blockHistory;
     private final PluginLogger m_logger;
 }

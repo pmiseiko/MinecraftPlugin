@@ -68,7 +68,7 @@ public class Main extends JavaPlugin
 
         m_listeners.add(new AutoReplaceEventListener(m_logger));
         m_listeners.add(new NewsEventListener());
-        m_listeners.add(new RewardEventListener(m_logger));
+        m_listeners.add(new RewardEventListener(dataFolder, m_logger));
         m_listeners.add(new SquidEventListener());
         m_listeners.add(new TombstoneEventListener(m_logger));
 

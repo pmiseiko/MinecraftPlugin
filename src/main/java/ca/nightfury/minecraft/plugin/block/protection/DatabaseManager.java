@@ -23,6 +23,8 @@ import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.plugin.PluginLogger;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
 
 public class DatabaseManager implements Database, Flushable, Closeable
 {
@@ -42,6 +44,20 @@ public class DatabaseManager implements Database, Flushable, Closeable
         final Statement sqlStatement = m_databaseConnection.createStatement();
 
         sqlStatement.execute(CREATE_BLOCK_OWNERSHIP_TABLE);
+
+        final File dbFile = new File(dataFolder, MAPDB_DATABASE_FILENAME);
+        final DB db =
+                DBMaker.fileDB(dbFile).closeOnJvmShutdown().concurrencyDisable().fileMmapEnableIfSupported().make();
+        final Map<BlockIdentity, PlayerIdentity> map = db.hashMap(
+                "BlockOwnership",
+                BlockIdentitySerializer.SINGLETON,
+                PlayerIdentitySerializer.SINGLETON).createOrOpen();
+
+        final Map<BlockIdentity, PlayerIdentity> blockOwners = getBlockOwners();
+        for (final Entry<BlockIdentity, PlayerIdentity> entry : blockOwners.entrySet())
+        {
+            map.put(entry.getKey(), entry.getValue());
+        }
     }
 
     public void integrityCheck(final Server server)
@@ -310,6 +326,7 @@ public class DatabaseManager implements Database, Flushable, Closeable
     private final static String QUERY_BLOCK_OWNERS;
     private final static String QUERY_BLOCK_TYPE;
     private final static String DATABASE_FILENAME = "block_manager.db";
+    private final static String MAPDB_DATABASE_FILENAME = "mapdb_block_manager.db";
     private final Connection m_databaseConnection;
     private final PluginLogger m_logger;
 
