@@ -37,7 +37,7 @@ public class HearthDatabaseImpl implements HearthDatabase
 
         m_hearthDisabled = hearthDisabledMaker.createOrOpen();
         m_logger = logger;
-        m_logger.info(String.format("Disabled Hearths: %d", m_hearthDisabled.size()));
+        m_logger.info(String.format("Disabled Hearth(s): %d", m_hearthDisabled.size()));
     }
 
     ///////////////////////////////////////////////////////////////////////////
