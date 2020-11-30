@@ -30,6 +30,7 @@ public class RewardDatabaseImpl implements RewardDatabase
         m_database = dbMaker.make();
         m_rewardedBlocks = m_database.hashSet("RewardedBlocks", BlockIdentitySerializer.SINGLETON).createOrOpen();
         m_logger = logger;
+        m_logger.info(String.format("Rewarded Block(s): %d", m_rewardedBlocks.size()));
     }
 
     ///////////////////////////////////////////////////////////////////////////
