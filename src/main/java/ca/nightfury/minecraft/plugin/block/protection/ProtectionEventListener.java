@@ -175,7 +175,7 @@ public class ProtectionEventListener implements Listener
                     {
                         final World attachedBlockWorld = block.getWorld();
 
-                        m_manager.deleteBlockOwner(blockIdentity);
+                        m_manager.deleteBlockOwner(attachedBlockIdentity);
                         m_logger.info(
                                 String.format(
                                         "%s[%s] unregistered %s in %s at %d/%d/%d because of %s in %s at %d/%d/%d",
