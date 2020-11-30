@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
@@ -248,6 +249,12 @@ public class ProtectionManagerImpl implements ProtectionManager
     }
 
     @Override
+    public Map<BlockIdentity, Material> getBlockTypes()
+    {
+        return m_database.getBlockTypes();
+    }
+
+    @Override
     public Material getBlockType(final BlockIdentity blockIdentity)
     {
         return m_database.getBlockType(blockIdentity);
@@ -257,6 +264,12 @@ public class ProtectionManagerImpl implements ProtectionManager
     public void setBlockType(final BlockIdentity blockIdentity, final Material material)
     {
         m_database.setBlockType(blockIdentity, material);
+    }
+
+    @Override
+    public void deleteBlockType(final BlockIdentity blockIdentity)
+    {
+        m_database.deleteBlockType(blockIdentity);
     }
 
     ///////////////////////////////////////////////////////////////////////////
