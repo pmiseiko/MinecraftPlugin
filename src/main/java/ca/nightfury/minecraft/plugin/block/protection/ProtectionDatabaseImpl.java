@@ -49,6 +49,8 @@ public class ProtectionDatabaseImpl implements ProtectionDatabase
                 BlockIdentitySerializer.SINGLETON,
                 MaterialSerializer.SINGLETON).createOrOpen();
         m_logger = logger;
+        m_logger.info(String.format("Registered Block Owner(s): %d", m_blockOwnership.size()));
+        m_logger.info(String.format("Registered Block Type(s): %d", m_blockType.size()));
     }
 
     ///////////////////////////////////////////////////////////////////////////
