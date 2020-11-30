@@ -31,6 +31,7 @@ import ca.nightfury.minecraft.plugin.database.BlockIdentity;
 import ca.nightfury.minecraft.plugin.entity.squids.SquidEventListener;
 import ca.nightfury.minecraft.plugin.inventory.autoreplace.AutoReplaceEventListener;
 import ca.nightfury.minecraft.plugin.news.NewsEventListener;
+import ca.nightfury.minecraft.plugin.player.hearth.HearthCommandHandler;
 
 public class Main extends JavaPlugin
 {
@@ -106,6 +107,8 @@ public class Main extends JavaPlugin
             pluginManager.registerEvents(listener, this);
             m_logger.info(String.format("Registered event listener: %s", listener));
         }
+
+        getCommand("hearth").setExecutor(new HearthCommandHandler());
     }
 
     @Override
