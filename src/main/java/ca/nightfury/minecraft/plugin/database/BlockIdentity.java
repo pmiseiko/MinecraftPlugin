@@ -1,4 +1,4 @@
-package ca.nightfury.minecraft.plugin.block.protection;
+package ca.nightfury.minecraft.plugin.database;
 
 import java.util.Objects;
 import java.util.UUID;

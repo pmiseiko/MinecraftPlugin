@@ -1,21 +1,12 @@
 package ca.nightfury.minecraft.plugin.block.protection;
 
-import java.io.Closeable;
 import java.io.File;
-import java.io.Flushable;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
-import java.util.Map.Entry;
-import java.util.logging.Level;
 
 import org.bukkit.Material;
 import org.bukkit.Server;
@@ -25,34 +16,51 @@ import org.bukkit.block.Block;
 import org.bukkit.plugin.PluginLogger;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
+import org.mapdb.DBMaker.Maker;
 
-public class DatabaseManager2 implements Database, Flushable, Closeable
+import ca.nightfury.minecraft.plugin.database.BlockIdentity;
+import ca.nightfury.minecraft.plugin.database.BlockIdentitySerializer;
+import ca.nightfury.minecraft.plugin.database.MaterialSerializer;
+import ca.nightfury.minecraft.plugin.database.PlayerIdentity;
+import ca.nightfury.minecraft.plugin.database.PlayerIdentitySerializer;
+
+public class ProtectionDatabaseImpl implements ProtectionDatabase
 {
     ///////////////////////////////////////////////////////////////////////////
     // Public Method(s).
     ///////////////////////////////////////////////////////////////////////////
 
-    public DatabaseManager2(final File dataFolder, final PluginLogger logger) throws SQLException
+    public ProtectionDatabaseImpl(final File dataFolder, final PluginLogger logger)
     {
-        final File dbFile = new File(dataFolder, MAPDB_DATABASE_FILENAME);
-        m_database =
-                DBMaker.fileDB(dbFile).closeOnJvmShutdown().concurrencyDisable().fileMmapEnableIfSupported().make();
-        m_ownership = m_database.hashMap(
+        final File dbFile = new File(dataFolder, BLOCK_OWNERSHIP_DATABASE_FILENAME);
+        final Maker dbMaker = DBMaker.fileDB(dbFile);
+
+        dbMaker.closeOnJvmShutdown();
+        dbMaker.concurrencyDisable();
+        dbMaker.fileMmapEnableIfSupported();
+
+        m_database = dbMaker.make();
+        m_blockOwnership = m_database.hashMap(
                 "BlockOwnership",
                 BlockIdentitySerializer.SINGLETON,
                 PlayerIdentitySerializer.SINGLETON).createOrOpen();
-
+        m_blockType = m_database.hashMap(
+                "BlockType",
+                BlockIdentitySerializer.SINGLETON,
+                MaterialSerializer.SINGLETON).createOrOpen();
         m_logger = logger;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Database Override(s).
+    ///////////////////////////////////////////////////////////////////////////
+
+    @Override
     public void integrityCheck(final Server server)
     {
-        final Map<BlockIdentity, PlayerIdentity> blockOwners = getBlockOwners();
-        for (final Entry<BlockIdentity, PlayerIdentity> entry : blockOwners.entrySet())
+        final Set<BlockIdentity> ownedBlocks = getOwnedBlocks();
+        for (final BlockIdentity blockIdentity : ownedBlocks)
         {
-            final BlockIdentity blockIdentity = entry.getKey();
-            entry.getValue();
-
             final UUID worldUUID = blockIdentity.getWorldUUID();
             final int xCoordinate = blockIdentity.getXCoordinate();
             final int yCoordinate = blockIdentity.getYCoordinate();
@@ -63,8 +71,7 @@ public class DatabaseManager2 implements Database, Flushable, Closeable
             final String worldName = world.getName();
             final Block worldBlock = world.getBlockAt(xCoordinate, yCoordinate, zCoordinate);
             final Material worldBlockType = worldBlock.getType();
-            final String worldBlockTypeName = worldBlockType.name();
-            final String databaseBlockTypeName = getBlockType(blockIdentity);
+            final Material databaseBlockType = getBlockType(blockIdentity);
 
             if (!Objects.equals(worldEnvironment, Environment.NORMAL))
             {
@@ -90,8 +97,8 @@ public class DatabaseManager2 implements Database, Flushable, Closeable
                                 zCoordinate));
                 deleteBlockOwner(blockIdentity);
             }
-            /*
-            else if (!Objects.equals(worldBlockTypeName, databaseBlockTypeName))
+
+            else if (!Objects.equals(worldBlockType, databaseBlockType))
             {
                 m_logger.warning(
                         String.format(
@@ -101,53 +108,58 @@ public class DatabaseManager2 implements Database, Flushable, Closeable
                                 yCoordinate,
                                 zCoordinate,
                                 worldBlockType,
-                                databaseBlockTypeName));
+                                databaseBlockType));
                 deleteBlockOwner(blockIdentity);
             }
-            */
         }
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Database Override(s).
-    ///////////////////////////////////////////////////////////////////////////
-
     @Override
-    public boolean createBlockOwner(final Block block, final PlayerIdentity playerIdentity)
+    public void createBlockOwner(final BlockIdentity blockIdentity, final PlayerIdentity playerIdentity)
     {
-        m_ownership.put(new BlockIdentity(block), playerIdentity);
-        return true;
+        m_blockOwnership.put(blockIdentity, playerIdentity);
     }
 
     @Override
-    public boolean deleteBlockOwner(final BlockIdentity blockIdentity)
+    public void deleteBlockOwner(final BlockIdentity blockIdentity)
     {
-        m_ownership.remove(blockIdentity);
-        return true;
+        m_blockOwnership.remove(blockIdentity);
+    }
+
+    @Override
+    public Set<BlockIdentity> getOwnedBlocks()
+    {
+        return new HashSet<>(m_blockOwnership.keySet());
+    }
+
+    @Override
+    public PlayerIdentity getBlockOwner(final BlockIdentity blockIdentity)
+    {
+        return m_blockOwnership.get(blockIdentity);
     }
 
     @Override
     public boolean isBlockOwned(final BlockIdentity blockIdentity)
     {
-        return m_ownership.containsKey(blockIdentity);
+        return m_blockOwnership.containsKey(blockIdentity);
     }
 
     @Override
     public boolean isBlockOwner(final BlockIdentity blockIdentity, final PlayerIdentity playerIdentity)
     {
-        return Objects.equals(playerIdentity, m_ownership.get(blockIdentity));
+        return Objects.equals(playerIdentity, m_blockOwnership.get(blockIdentity));
     }
 
     @Override
-    public Map<BlockIdentity, PlayerIdentity> getBlockOwners()
+    public Material getBlockType(final BlockIdentity blockIdentity)
     {
-        return m_ownership;
+        return m_blockType.get(blockIdentity);
     }
 
     @Override
-    public String getBlockType(final BlockIdentity blockIdentity)
+    public void setBlockType(final BlockIdentity blockIdentity, final Material material)
     {
-        return null;
+        m_blockType.put(blockIdentity, material);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -176,8 +188,9 @@ public class DatabaseManager2 implements Database, Flushable, Closeable
     // Non-Public Field(s).
     ///////////////////////////////////////////////////////////////////////////
 
-    private final static String MAPDB_DATABASE_FILENAME = "mapdb_block_manager.db";
+    private final static String BLOCK_OWNERSHIP_DATABASE_FILENAME = "block_ownership.db";
     private final DB m_database;
-    private final Map<BlockIdentity, PlayerIdentity> m_ownership;
+    private final Map<BlockIdentity, PlayerIdentity> m_blockOwnership;
+    private final Map<BlockIdentity, Material> m_blockType;
     private final PluginLogger m_logger;
 }

@@ -1,6 +1,7 @@
-package ca.nightfury.minecraft.plugin.block.protection;
+package ca.nightfury.minecraft.plugin.database;
 
 import java.io.IOException;
+import java.io.InvalidObjectException;
 import java.util.UUID;
 
 import org.mapdb.DataInput2;
@@ -20,19 +21,27 @@ public class PlayerIdentitySerializer implements Serializer<PlayerIdentity>
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void serialize(DataOutput2 out, PlayerIdentity value) throws IOException
+    public void serialize(final DataOutput2 out, final PlayerIdentity value) throws IOException
     {
         final UUID playerUUID = value.getUUID();
 
+        Serializer.INTEGER.serialize(out, OBJECT_VERSION);
         Serializer.UUID.serialize(out, playerUUID);
     }
 
     @Override
-    public PlayerIdentity deserialize(DataInput2 input, int available) throws IOException
+    public PlayerIdentity deserialize(final DataInput2 input, final int available) throws IOException
     {
-        final UUID playerUUID = Serializer.UUID.deserialize(input, available);
+        final int objectVersion = Serializer.INTEGER.deserialize(input, available);
+        switch (objectVersion)
+        {
+            case 0:
+                final UUID playerUUID = Serializer.UUID.deserialize(input, available);
+                return new PlayerIdentity(playerUUID);
 
-        return new PlayerIdentity(playerUUID);
+            default:
+                throw new InvalidObjectException("Unsupported object version: " + objectVersion);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -42,4 +51,10 @@ public class PlayerIdentitySerializer implements Serializer<PlayerIdentity>
     private PlayerIdentitySerializer()
     {
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Non-Public Field(s).
+    ///////////////////////////////////////////////////////////////////////////
+
+    private final static int OBJECT_VERSION = 0;
 }

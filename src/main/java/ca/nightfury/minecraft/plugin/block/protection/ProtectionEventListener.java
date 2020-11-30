@@ -1,36 +1,21 @@
 package ca.nightfury.minecraft.plugin.block.protection;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
-import org.bukkit.block.data.Bisected.Half;
-import org.bukkit.block.data.BlockData;
-import org.bukkit.block.data.Directional;
-import org.bukkit.block.data.FaceAttachable;
-import org.bukkit.block.data.FaceAttachable.AttachedFace;
-import org.bukkit.block.data.Powerable;
-import org.bukkit.block.data.type.Door;
-import org.bukkit.block.data.type.Switch;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -55,6 +40,8 @@ import org.bukkit.plugin.PluginLogger;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 
+import ca.nightfury.minecraft.plugin.database.BlockIdentity;
+import ca.nightfury.minecraft.plugin.database.PlayerIdentity;
 import ca.nightfury.minecraft.plugin.services.PrettyMessages;
 
 public class ProtectionEventListener implements Listener
@@ -63,97 +50,12 @@ public class ProtectionEventListener implements Listener
     // Public Method(s).
     ///////////////////////////////////////////////////////////////////////////
 
-    public ProtectionEventListener(final JavaPlugin plugin, final BlockManager blockManager, final PluginLogger logger)
+    public ProtectionEventListener(final JavaPlugin plugin, final ProtectionManager manager, final PluginLogger logger)
     {
         m_scheduler = Bukkit.getScheduler();
         m_plugin = plugin;
-        m_blockManager = Objects.requireNonNull(blockManager);
+        m_manager = Objects.requireNonNull(manager);
         m_logger = Objects.requireNonNull(logger);
-    }
-
-    public void integrityCheck(final Server server)
-    {
-        final Map<BlockIdentity, PlayerIdentity> blockOwners = m_blockManager.getBlockOwners();
-        final Set<BlockIdentity> blocksChecked = new HashSet<>();
-
-        for (final Entry<BlockIdentity, PlayerIdentity> entry : blockOwners.entrySet())
-        {
-            final BlockIdentity blockIdentity = entry.getKey();
-            if (blocksChecked.contains(blockIdentity))
-            {
-                continue;
-            }
-
-            final PlayerIdentity playerIdentity = entry.getValue();
-
-            final UUID worldUUID = blockIdentity.getWorldUUID();
-            final int xCoordinate = blockIdentity.getXCoordinate();
-            final int yCoordinate = blockIdentity.getYCoordinate();
-            final int zCoordinate = blockIdentity.getZCoordinate();
-
-            final World world = server.getWorld(worldUUID);
-            final Block block = world.getBlockAt(xCoordinate, yCoordinate, zCoordinate);
-
-            final Set<Block> protectableBlocks = getAttachedProtectableBlocks(block, Integer.MAX_VALUE);
-            for (final Block protectableBlock : protectableBlocks)
-            {
-                final BlockIdentity protectableBlockIdentity = new BlockIdentity(protectableBlock);
-                blocksChecked.add(protectableBlockIdentity);
-            }
-
-            if (protectableBlocks.size() < BLOCK_COUNT_BEFORE_ACTIVATION)
-            {
-                for (final Block protectableBlock : protectableBlocks)
-                {
-                    if (m_blockManager.isBlockOwned(protectableBlock))
-                    {
-                        m_logger.info(
-                                String.format(
-                                        "Protection removed from block %s in %s at %d/%d/%d",
-                                        protectableBlock.getType(),
-                                        protectableBlock.getWorld().getName(),
-                                        protectableBlock.getX(),
-                                        protectableBlock.getY(),
-                                        protectableBlock.getZ()));
-
-                        m_blockManager.unregisterBlockOwner(protectableBlock);
-                    }
-                }
-            }
-            else
-            {
-                for (final Block protectableBlock : protectableBlocks)
-                {
-                    if (m_blockManager.isBlockOwned(protectableBlock))
-                    {
-                        if (!m_blockManager.isBlockOwnedByPlayer(protectableBlock, playerIdentity))
-                        {
-                            m_logger.info(
-                                    String.format(
-                                            "Ownership collision with block %s in %s at %d/%d/%d",
-                                            protectableBlock.getType(),
-                                            protectableBlock.getWorld().getName(),
-                                            protectableBlock.getX(),
-                                            protectableBlock.getY(),
-                                            protectableBlock.getZ()));
-                        }
-                    }
-                    else
-                    {
-                        m_blockManager.registerBlockOwner(protectableBlock, playerIdentity);
-                        m_logger.info(
-                                String.format(
-                                        "Protection added for %s at block %s in %s at %d/%d/%d",
-                                        playerIdentity.getUUID(),
-                                        protectableBlock.getType(),
-                                        protectableBlock.getWorld().getName(),
-                                        protectableBlock.getX(),
-                                        protectableBlock.getY(),
-                                        protectableBlock.getZ()));
-                    }
-                }
-            }
-        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -167,7 +69,8 @@ public class ProtectionEventListener implements Listener
     {
         for (final Block block : event.blockList())
         {
-            if (m_blockManager.isBlockOwned(block))
+            final BlockIdentity blockIdentity = new BlockIdentity(block);
+            if (m_manager.isBlockOwned(blockIdentity))
             {
                 event.setCancelled(true);
                 break;
@@ -179,7 +82,9 @@ public class ProtectionEventListener implements Listener
     public void onBlockFromToEvent(final BlockFromToEvent event)
     {
         final Block block = event.getToBlock();
-        if (m_blockManager.isBlockOwned(block))
+        final BlockIdentity blockIdentity = new BlockIdentity(block);
+
+        if (m_manager.isBlockOwned(blockIdentity))
         {
             event.setCancelled(true);
         }
@@ -190,7 +95,8 @@ public class ProtectionEventListener implements Listener
     {
         for (final Block block : event.getBlocks())
         {
-            if (m_blockManager.isBlockOwned(block))
+            final BlockIdentity blockIdentity = new BlockIdentity(block);
+            if (m_manager.isBlockOwned(blockIdentity))
             {
                 event.setCancelled(true);
                 break;
@@ -203,7 +109,8 @@ public class ProtectionEventListener implements Listener
     {
         for (final Block block : event.getBlocks())
         {
-            if (m_blockManager.isBlockOwned(block))
+            final BlockIdentity blockIdentity = new BlockIdentity(block);
+            if (m_manager.isBlockOwned(blockIdentity))
             {
                 event.setCancelled(true);
                 break;
@@ -221,14 +128,28 @@ public class ProtectionEventListener implements Listener
     public void onBlockBreakEvent(final BlockBreakEvent event)
     {
         final Block block = event.getBlock();
+        final BlockIdentity blockIdentity = new BlockIdentity(block);
+        final Material blockType = block.getType();
         final Player player = event.getPlayer();
+        final PlayerIdentity playerIdentity = new PlayerIdentity(player);
+        final World world = block.getWorld();
 
         // Blocks cannot be broken unless they are not owned or owned by the player.
-        if (m_blockManager.isBlockOwned(block))
+        if (m_manager.isBlockOwned(blockIdentity))
         {
-            if (m_blockManager.isBlockOwnedByPlayer(block, player))
+            if (m_manager.isBlockOwner(blockIdentity, playerIdentity))
             {
-                m_blockManager.unregisterBlockOwner(block, player);
+                m_manager.deleteBlockOwner(blockIdentity);
+                m_logger.info(
+                        String.format(
+                                "%s[%s] unregistered %s in %s at %d/%d/%d",
+                                player.getName(),
+                                player.getUniqueId(),
+                                blockType,
+                                world.getName(),
+                                block.getX(),
+                                block.getY(),
+                                block.getZ()));
             }
             else
             {
@@ -238,116 +159,64 @@ public class ProtectionEventListener implements Listener
             }
         }
 
-        // Example:
-        // <-----door----->
-        // <-----door----->
-        //
-        // Note: Only a bisected door block contains a second half.
-        //
-        final BlockData blockData = block.getBlockData();
-        if (blockData instanceof Door)
+        m_scheduler.scheduleSyncDelayedTask(m_plugin, () ->
         {
-            final Door bisectedBlockData = (Door) blockData;
-            final Half whichBlock = bisectedBlockData.getHalf();
-            final Block otherBlock;
-
-            switch (whichBlock)
+            for (final BlockFace currentBlockDirection : ProtectionManagerImpl.ATTACHED_NEIGHBOURS)
             {
-                case BOTTOM:
-                    otherBlock = block.getRelative(BlockFace.UP);
-                    break;
-                case TOP:
-                    otherBlock = block.getRelative(BlockFace.DOWN);
-                    break;
-                default:
-                    throw new IllegalArgumentException();
-            }
+                final Block attachedBlock = block.getRelative(currentBlockDirection);
+                final BlockIdentity attachedBlockIdentity = new BlockIdentity(attachedBlock);
 
-            m_blockManager.unregisterBlockOwner(otherBlock, player);
-            return;
-        }
-
-        // Example:
-        // <--north-west--> <----switch----> <--north-east-->
-        // <----switch----> <-----dirt-----> <----switch---->
-        // <--south-west--> <----switch----> <--south-east-->
-        //
-        for (final BlockFace currentBlockDirection : ATTACHED_NEIGHBOURS)
-        {
-            final Block attachedBlock = block.getRelative(currentBlockDirection);
-            final BlockData attachedBlockData = attachedBlock.getBlockData();
-
-            // Note: Other objects could break when their parent block breaks
-            // such as a torch, but the torch does not have a BlockData class.
-            if (attachedBlockData instanceof Switch)
-            {
-                // Example:
-                // <----switch----> <-----down----->
-                // <-----dirt-----> <-----self----->
-                // <----switch----> <------up------>
-                //
-                final AttachedFace attachedFace = ((FaceAttachable) attachedBlockData).getAttachedFace();
-                final BlockFace attachedBlockDirection;
-
-                switch (attachedFace)
+                if (m_manager.isBlockOwned(attachedBlockIdentity))
                 {
-                    case CEILING:
-                        attachedBlockDirection = BlockFace.DOWN;
-                        break;
-                    case FLOOR:
-                        attachedBlockDirection = BlockFace.UP;
-                        break;
-                    case WALL:
-                        attachedBlockDirection = ((Directional) attachedBlockData).getFacing();
-                        break;
-                    default:
-                        throw new IllegalArgumentException();
-                }
+                    final Material attachedBlockActualType = attachedBlock.getType();
+                    final Material attachedBlockExpectType = m_manager.getBlockType(attachedBlockIdentity);
 
-                if (Objects.equals(currentBlockDirection, attachedBlockDirection))
-                {
-                    m_blockManager.unregisterBlockOwner(attachedBlock, player);
-                }
-            }
-            else if (Objects.equals(currentBlockDirection, BlockFace.UP))
-            {
-                // Example:
-                // <pressure plate>
-                // <-----dirt----->
-                //
-                if (attachedBlockData instanceof Powerable)
-                {
-                    m_blockManager.unregisterBlockOwner(attachedBlock, player);
-
-                    // Example:
-                    // <-----door----->
-                    // <-----door----->
-                    // <-----dirt----->
-                    //
-                    // Note: Only a bisected door block contains a second half.
-                    //
-                    if (attachedBlockData instanceof Door)
+                    if (Objects.equals(attachedBlockActualType, attachedBlockExpectType))
                     {
-                        final Block topBlock = attachedBlock.getRelative(BlockFace.UP);
+                        final World attachedBlockWorld = block.getWorld();
 
-                        m_blockManager.unregisterBlockOwner(topBlock, player);
+                        m_manager.deleteBlockOwner(blockIdentity);
+                        m_logger.info(
+                                String.format(
+                                        "%s[%s] unregistered %s in %s at %d/%d/%d because of %s in %s at %d/%d/%d",
+                                        player.getName(),
+                                        player.getUniqueId(),
+                                        attachedBlockExpectType,
+                                        attachedBlockWorld.getName(),
+                                        attachedBlock.getX(),
+                                        attachedBlock.getY(),
+                                        attachedBlock.getZ(),
+                                        blockType,
+                                        world.getName(),
+                                        block.getX(),
+                                        block.getY(),
+                                        block.getZ()));
                     }
                 }
             }
-        }
+        }, 1);
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onBlockIgniteEvent(final BlockIgniteEvent event)
     {
         final Block block = event.getBlock();
-        final Player player = event.getPlayer();
+        final BlockIdentity blockIdentity = new BlockIdentity(block);
 
-        if (m_blockManager.isBlockOwned(block))
+        if (m_manager.isBlockOwned(blockIdentity))
         {
-            if ((player == null) || !m_blockManager.isBlockOwnedByPlayer(block, player))
+            final Player player = event.getPlayer();
+            if (player == null)
             {
                 event.setCancelled(true);
+            }
+            else
+            {
+                final PlayerIdentity playerIdentity = new PlayerIdentity(player);
+                if (!m_manager.isBlockOwner(blockIdentity, playerIdentity))
+                {
+                    event.setCancelled(true);
+                }
             }
         }
     }
@@ -399,11 +268,13 @@ public class ProtectionEventListener implements Listener
         // Protectable blocks must not be placed beside protected blocks owned by other
         // players.
         final Player player = event.getPlayer();
-        final List<Block> ownedBlocks = getProtectedBlocks(block, 1);
+        final PlayerIdentity playerIdentity = new PlayerIdentity(player);
+        final List<Block> ownedBlocks = m_manager.getProtectedBlocks(block, 1);
 
         for (final Block ownedBlock : ownedBlocks)
         {
-            if (!m_blockManager.isBlockOwnedByPlayer(ownedBlock, player))
+            final BlockIdentity ownedBlockIdentity = new BlockIdentity(ownedBlock);
+            if (!m_manager.isBlockOwner(ownedBlockIdentity, playerIdentity))
             {
                 PrettyMessages.sendMessage(
                         player,
@@ -419,25 +290,52 @@ public class ProtectionEventListener implements Listener
             }
         }
 
-        final Set<Block> protectableBlocks = getAttachedProtectableBlocks(block, BLOCK_COUNT_BEFORE_ACTIVATION * 2);
+        final int minimumAttachedProtectableBlocksBeforeProtectionActivation =
+                m_manager.getMinimumAttachedProtectableBlocksBeforeProtectionActivation();
+        final Set<Block> protectableBlocks = m_manager.getAttachedProtectableBlocks(
+                block,
+                minimumAttachedProtectableBlocksBeforeProtectionActivation);
         final Set<Block> newlyProtectedBlocks = new HashSet<>();
 
-        if (protectableBlocks.size() >= BLOCK_COUNT_BEFORE_ACTIVATION)
+        if (protectableBlocks.size() >= minimumAttachedProtectableBlocksBeforeProtectionActivation)
         {
             for (final Block protectableBlock : protectableBlocks)
             {
-                if (m_blockManager.isBlockOwned(protectableBlock))
+                final BlockIdentity protectableBlockIdentity = new BlockIdentity(protectableBlock);
+                if (m_manager.isBlockOwned(protectableBlockIdentity))
                 {
-                    if (!m_blockManager.isBlockOwnedByPlayer(protectableBlock, player))
+                    if (!m_manager.isBlockOwner(protectableBlockIdentity, playerIdentity))
                     {
-                        m_blockManager.unregisterBlockOwner(protectableBlock, player);
-                        m_blockManager.registerBlockOwner(protectableBlock, player);
+                        m_manager.deleteBlockOwner(protectableBlockIdentity);
+                        m_manager.createBlockOwner(protectableBlockIdentity, playerIdentity);
+                        m_logger.info(
+                                String.format(
+                                        "%s[%s] overwrote registration of %s in %s at %d/%d/%d",
+                                        player.getName(),
+                                        player.getUniqueId(),
+                                        block.getType(),
+                                        world.getName(),
+                                        block.getX(),
+                                        block.getY(),
+                                        block.getZ()));
+
                         newlyProtectedBlocks.add(protectableBlock);
                     }
                 }
                 else
                 {
-                    m_blockManager.registerBlockOwner(protectableBlock, player);
+                    m_manager.createBlockOwner(protectableBlockIdentity, playerIdentity);
+                    m_logger.info(
+                            String.format(
+                                    "%s[%s] registered %s in %s at %d/%d/%d",
+                                    player.getName(),
+                                    player.getUniqueId(),
+                                    block.getType(),
+                                    world.getName(),
+                                    block.getX(),
+                                    block.getY(),
+                                    block.getZ()));
+
                     newlyProtectedBlocks.add(protectableBlock);
                 }
             }
@@ -468,7 +366,8 @@ public class ProtectionEventListener implements Listener
                         int count = 0;
                         for (final Block protectedBlock : pendingProtectedBlocks)
                         {
-                            if (m_blockManager.isBlockOwnedByPlayer(protectedBlock, player))
+                            final BlockIdentity protectedBlockIdentity = new BlockIdentity(protectedBlock);
+                            if (m_manager.isBlockOwner(protectedBlockIdentity, playerIdentity))
                             {
                                 count++;
                             }
@@ -495,7 +394,9 @@ public class ProtectionEventListener implements Listener
     public void onEntityBreakDoorEvent(final EntityBreakDoorEvent event)
     {
         final Block block = event.getBlock();
-        if (m_blockManager.isBlockOwned(block))
+        final BlockIdentity blockIdentity = new BlockIdentity(block);
+
+        if (m_manager.isBlockOwned(blockIdentity))
         {
             event.setCancelled(true);
         }
@@ -505,7 +406,9 @@ public class ProtectionEventListener implements Listener
     public void onEntityChangeBlockEvent(final EntityChangeBlockEvent event)
     {
         final Block block = event.getBlock();
-        if (m_blockManager.isBlockOwned(block))
+        final BlockIdentity blockIdentity = new BlockIdentity(block);
+
+        if (m_manager.isBlockOwned(blockIdentity))
         {
             event.setCancelled(true);
         }
@@ -515,7 +418,9 @@ public class ProtectionEventListener implements Listener
     public void onEntityEnterBlockEvent(final EntityEnterBlockEvent event)
     {
         final Block block = event.getBlock();
-        if (m_blockManager.isBlockOwned(block))
+        final BlockIdentity blockIdentity = new BlockIdentity(block);
+
+        if (m_manager.isBlockOwned(blockIdentity))
         {
             event.setCancelled(true);
         }
@@ -526,7 +431,8 @@ public class ProtectionEventListener implements Listener
     {
         for (final Block block : event.blockList())
         {
-            if (m_blockManager.isBlockOwned(block))
+            final BlockIdentity blockIdentity = new BlockIdentity(block);
+            if (m_manager.isBlockOwned(blockIdentity))
             {
                 event.setCancelled(true);
                 break;
@@ -538,7 +444,9 @@ public class ProtectionEventListener implements Listener
     public void onEntityInteractEvent(final EntityInteractEvent event)
     {
         final Block block = event.getBlock();
-        if (m_blockManager.isBlockOwned(block))
+        final BlockIdentity blockIdentity = new BlockIdentity(block);
+
+        if (m_manager.isBlockOwned(blockIdentity))
         {
             event.setCancelled(true);
         }
@@ -572,13 +480,15 @@ public class ProtectionEventListener implements Listener
                         break;
                     }
 
-                    if (!m_blockManager.isBlockOwned(clickedBlock))
+                    final BlockIdentity clickedBlockIdentity = new BlockIdentity(clickedBlock);
+                    if (!m_manager.isBlockOwned(clickedBlockIdentity))
                     {
                         PrettyMessages.sendMessage(player, "That block is not protected.");
                         break;
                     }
 
-                    if (!m_blockManager.isBlockOwnedByPlayer(clickedBlock, player))
+                    final PlayerIdentity playerIdentity = new PlayerIdentity(player);
+                    if (!m_manager.isBlockOwner(clickedBlockIdentity, playerIdentity))
                     {
                         PrettyMessages.sendMessage(player, "That block is protected.");
                         break;
@@ -602,15 +512,18 @@ public class ProtectionEventListener implements Listener
                     break;
                 }
 
-                if (!m_blockManager.isBlockOwned(clickedBlock))
+                final BlockIdentity clickedBlockIdentity = new BlockIdentity(clickedBlock);
+                if (!m_manager.isBlockOwned(clickedBlockIdentity))
                 {
                     break;
                 }
 
                 final Player player = event.getPlayer();
-                if (!m_blockManager.isBlockOwnedByPlayer(clickedBlock, player))
+                final PlayerIdentity playerIdentity = new PlayerIdentity(player);
+
+                if (!m_manager.isBlockOwner(clickedBlockIdentity, playerIdentity))
                 {
-                    final List<Block> protectedBlocks = getProtectedBlocks(clickedBlock, 1);
+                    final List<Block> protectedBlocks = m_manager.getProtectedBlocks(clickedBlock, 1);
                     for (final Block protectedBlock : protectedBlocks)
                     {
                         final BlockState protectedBlockData = protectedBlock.getState();
@@ -662,19 +575,19 @@ public class ProtectionEventListener implements Listener
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onStructureGrowEvent(final StructureGrowEvent event)
     {
-        final Player player = event.getPlayer();
         final List<BlockState> blockStates = event.getBlocks();
+        final Player player = event.getPlayer();
+        final PlayerIdentity playerIdentity = new PlayerIdentity(player);
 
         for (final BlockState blockState : blockStates)
         {
             final Block block = blockState.getBlock();
-            if (m_blockManager.isBlockOwned(block))
+            final BlockIdentity blockIdentity = new BlockIdentity(block);
+
+            if (m_manager.isBlockOwned(blockIdentity) &&
+                    ((player == null) || !m_manager.isBlockOwner(blockIdentity, playerIdentity)))
             {
-                if ((player == null) || !m_blockManager.isBlockOwnedByPlayer(block, player))
-                {
-                    event.setCancelled(true);
-                    break;
-                }
+                event.setCancelled(true);
             }
         }
     }
@@ -690,112 +603,15 @@ public class ProtectionEventListener implements Listener
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    // Non-Public Method(s).
-    ///////////////////////////////////////////////////////////////////////////
-
-    protected Set<Block> getAttachedProtectableBlocks(final Block originBlock, final int limit)
-    {
-        final Material originBlockType = originBlock.getType();
-        if (ProtectedMaterials.isProtectedMaterial(originBlockType))
-        {
-            final Set<Block> protectableBlocks = new HashSet<>();
-            final HashSet<Block> blocksChecked = new HashSet<>();
-            final Queue<Block> blocks = new LinkedList<>();
-
-            blocks.add(originBlock);
-            protectableBlocks.add(originBlock);
-
-            while (!blocks.isEmpty() && (protectableBlocks.size() < limit))
-            {
-                final Block block = blocks.remove();
-                if (blocksChecked.contains(block))
-                {
-                    continue;
-                }
-                else
-                {
-                    blocksChecked.add(block);
-                }
-
-                final List<Block> neighbourBlocks = getAttachedProtectableBlocks(block);
-                for (final Block neighbourBlock : neighbourBlocks)
-                {
-                    if (!blocksChecked.contains(neighbourBlock))
-                    {
-                        blocks.add(neighbourBlock);
-                        protectableBlocks.add(neighbourBlock);
-                    }
-                }
-            }
-
-            return protectableBlocks;
-        }
-        else
-        {
-            return Collections.emptySet();
-        }
-    }
-
-    protected List<Block> getAttachedProtectableBlocks(final Block originBlock)
-    {
-        final List<Block> protectableBlocks = new ArrayList<>(ATTACHED_NEIGHBOURS.size());
-        for (final BlockFace blockFace : ATTACHED_NEIGHBOURS)
-        {
-            final Block block = originBlock.getRelative(blockFace);
-            final Material blockType = block.getType();
-
-            if (ProtectedMaterials.isProtectedMaterial(blockType))
-            {
-                protectableBlocks.add(block);
-            }
-        }
-
-        return Collections.unmodifiableList(protectableBlocks);
-    }
-
-    protected List<Block> getProtectedBlocks(final Block originBlock, final int distance)
-    {
-        final int length = (distance * 2) + 1;
-        final int area = length * length;
-        final int volume = area * length;
-        final List<Block> ownedBlocks = new ArrayList<>(volume);
-
-        for (int xOffset = -distance; xOffset < (distance + 1); xOffset++)
-        {
-            for (int yOffset = -distance; yOffset < (distance + 1); yOffset++)
-            {
-                for (int zOffset = -distance; zOffset < (distance + 1); zOffset++)
-                {
-                    final Block block = originBlock.getRelative(xOffset, yOffset, zOffset);
-                    if (m_blockManager.isBlockOwned(block))
-                    {
-                        ownedBlocks.add(block);
-                    }
-                }
-            }
-        }
-
-        return Collections.unmodifiableList(ownedBlocks);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
     // Non-Public Field(s).
     ///////////////////////////////////////////////////////////////////////////
 
-    private final static int BLOCK_COUNT_BEFORE_ACTIVATION = 128;
     private final static Material MAIN_HAND_BLOCK_DEBUG_MATERIAL = Material.STICK;
-    private final static List<BlockFace> ATTACHED_NEIGHBOURS = Arrays.asList(
-            BlockFace.NORTH,
-            BlockFace.EAST,
-            BlockFace.SOUTH,
-            BlockFace.WEST,
-            BlockFace.UP,
-            BlockFace.DOWN);
     private final static int PLAYER_PROTECTED_BLOCK_MESSAGE_DELAY = 100;
     private final Map<UUID, Integer> m_playerPendingProtectedBlockMessage = new HashMap<>();
     private final Map<UUID, Set<Block>> m_playerPendingProtectedBlocks = new HashMap<>();
     private final BukkitScheduler m_scheduler;
     private final JavaPlugin m_plugin;
-    private final BlockManager m_blockManager;
+    private final ProtectionManager m_manager;
     private final PluginLogger m_logger;
 }

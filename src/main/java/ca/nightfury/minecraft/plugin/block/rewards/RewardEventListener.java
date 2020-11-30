@@ -1,8 +1,6 @@
 package ca.nightfury.minecraft.plugin.block.rewards;
 
-import java.io.File;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -19,11 +17,8 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.PluginLogger;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
 
-import ca.nightfury.minecraft.plugin.block.protection.BlockIdentity;
-import ca.nightfury.minecraft.plugin.block.protection.BlockIdentitySerializer;
+import ca.nightfury.minecraft.plugin.database.BlockIdentity;
 
 public class RewardEventListener implements Listener
 {
@@ -31,13 +26,9 @@ public class RewardEventListener implements Listener
     // Public Method(s).
     ///////////////////////////////////////////////////////////////////////////
 
-    public RewardEventListener(final File dataFolder, final PluginLogger logger)
+    public RewardEventListener(final RewardDatabase database, final PluginLogger logger)
     {
-        final File dbFile = new File(dataFolder, DATABASE_FILE_NAME);
-        final DB db =
-                DBMaker.fileDB(dbFile).closeOnJvmShutdown().concurrencyDisable().fileMmapEnableIfSupported().make();
-
-        m_blockHistory = db.hashSet("BlockHistory", BlockIdentitySerializer.SINGLETON).createOrOpen();
+        m_database = database;
         m_logger = logger;
     }
 
@@ -51,7 +42,7 @@ public class RewardEventListener implements Listener
         final Block block = event.getBlock();
         final BlockIdentity blockIdentity = new BlockIdentity(block);
 
-        if (!m_blockHistory.contains(blockIdentity))
+        if (!m_database.rewardBlock(blockIdentity))
         {
             final Location location = block.getLocation();
             final World world = block.getWorld();
@@ -88,8 +79,6 @@ public class RewardEventListener implements Listener
                                     itemAmount));
                 }
             }
-
-            m_blockHistory.add(blockIdentity);
         }
     }
 
@@ -107,7 +96,6 @@ public class RewardEventListener implements Listener
     // Non-Public Field(s).
     ///////////////////////////////////////////////////////////////////////////
 
-    private final static String DATABASE_FILE_NAME = "rewards.db";
-    private final Set<BlockIdentity> m_blockHistory;
+    private final RewardDatabase m_database;
     private final PluginLogger m_logger;
 }

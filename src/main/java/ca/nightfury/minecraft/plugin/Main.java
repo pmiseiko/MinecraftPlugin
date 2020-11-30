@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 
 import org.bukkit.Server;
@@ -16,13 +17,17 @@ import org.bukkit.plugin.PluginLogger;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import ca.nightfury.minecraft.plugin.block.protection.BlockManager;
-import ca.nightfury.minecraft.plugin.block.protection.DatabaseCache;
-import ca.nightfury.minecraft.plugin.block.protection.DatabaseManager;
-import ca.nightfury.minecraft.plugin.block.protection.DatabaseManager2;
+import ca.nightfury.minecraft.plugin.block.protection.DatabaseMigrator;
+import ca.nightfury.minecraft.plugin.block.protection.ProtectionDatabase;
+import ca.nightfury.minecraft.plugin.block.protection.ProtectionDatabaseImpl;
 import ca.nightfury.minecraft.plugin.block.protection.ProtectionEventListener;
+import ca.nightfury.minecraft.plugin.block.protection.ProtectionManager;
+import ca.nightfury.minecraft.plugin.block.protection.ProtectionManagerImpl;
+import ca.nightfury.minecraft.plugin.block.rewards.RewardDatabase;
+import ca.nightfury.minecraft.plugin.block.rewards.RewardDatabaseImpl;
 import ca.nightfury.minecraft.plugin.block.rewards.RewardEventListener;
 import ca.nightfury.minecraft.plugin.block.tombstone.TombstoneEventListener;
+import ca.nightfury.minecraft.plugin.database.BlockIdentity;
 import ca.nightfury.minecraft.plugin.entity.squids.SquidEventListener;
 import ca.nightfury.minecraft.plugin.inventory.autoreplace.AutoReplaceEventListener;
 import ca.nightfury.minecraft.plugin.news.NewsEventListener;
@@ -44,38 +49,58 @@ public class Main extends JavaPlugin
             dataFolder.mkdir();
         }
 
+        final ProtectionDatabase protectionDatabase = new ProtectionDatabaseImpl(dataFolder, m_logger);
+        final ProtectionManager protectionManager = new ProtectionManagerImpl(protectionDatabase, m_logger);
+
         try
         {
-            final DatabaseManager2 databaseManager = new DatabaseManager2(dataFolder, m_logger);
-            final Server server = getServer();
+            final Set<BlockIdentity> ownedBlocks = protectionDatabase.getOwnedBlocks();
+            if (ownedBlocks.isEmpty())
+            {
+                m_logger.info("Migrating database.");
 
-            databaseManager.integrityCheck(server);
+                try (final DatabaseMigrator migrator = new DatabaseMigrator(dataFolder, m_logger))
+                {
+                    migrator.migrate(protectionDatabase);
+                }
+                catch (final IOException exception)
+                {
+                    m_logger.log(Level.SEVERE, "Failure while closing old database", exception);
+                }
 
-            m_closeables.add(databaseManager);
-            m_flushables.add(databaseManager);
-
-            final DatabaseCache databaseCache = new DatabaseCache(databaseManager, m_logger);
-            final BlockManager blockManager = new BlockManager(databaseCache, m_logger);
-            final ProtectionEventListener eventListener = new ProtectionEventListener(this, blockManager, m_logger);
-
-            eventListener.integrityCheck(server);
-
-            m_listeners.add(eventListener);
+                m_logger.info("Migration complete.");
+            }
+            else
+            {
+                m_logger.info("Skip database migration.");
+            }
         }
         catch (final SQLException exception)
         {
-            m_logger.log(Level.SEVERE, "Block protection initialization error", exception);
+            m_logger.log(Level.SEVERE, "Failure while reading old database", exception);
         }
+
+        m_closeables.add(protectionDatabase);
+        m_flushables.add(protectionDatabase);
+
+        final Server server = getServer();
+
+        protectionDatabase.integrityCheck(server);
+        protectionManager.integrityCheck(server);
+
+        final RewardDatabase rewardDatabase = new RewardDatabaseImpl(dataFolder, m_logger);
+
+        m_closeables.add(rewardDatabase);
+        m_flushables.add(rewardDatabase);
 
         m_listeners.add(new AutoReplaceEventListener(m_logger));
         m_listeners.add(new NewsEventListener());
-        m_listeners.add(new RewardEventListener(dataFolder, m_logger));
+        m_listeners.add(new ProtectionEventListener(this, protectionManager, m_logger));
+        m_listeners.add(new RewardEventListener(rewardDatabase, m_logger));
         m_listeners.add(new SquidEventListener());
         m_listeners.add(new TombstoneEventListener(m_logger));
 
-        final Server server = getServer();
         final PluginManager pluginManager = server.getPluginManager();
-
         for (final Listener listener : m_listeners)
         {
             pluginManager.registerEvents(listener, this);
