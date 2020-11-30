@@ -24,19 +24,6 @@ import ca.nightfury.minecraft.plugin.database.PlayerIdentity;
 public class ProtectionManagerImpl implements ProtectionManager
 {
     ///////////////////////////////////////////////////////////////////////////
-    // Public Field(s).
-    ///////////////////////////////////////////////////////////////////////////
-
-    public final static List<BlockFace> ATTACHED_NEIGHBOURS = Collections.unmodifiableList(
-            Arrays.asList(
-                    BlockFace.NORTH,
-                    BlockFace.EAST,
-                    BlockFace.SOUTH,
-                    BlockFace.WEST,
-                    BlockFace.UP,
-                    BlockFace.DOWN));
-
-    ///////////////////////////////////////////////////////////////////////////
     // Public Method(s).
     ///////////////////////////////////////////////////////////////////////////
 
@@ -188,24 +175,6 @@ public class ProtectionManagerImpl implements ProtectionManager
     }
 
     @Override
-    public List<Block> getAttachedProtectableBlocks(final Block originBlock)
-    {
-        final List<Block> protectableBlocks = new ArrayList<>(ATTACHED_NEIGHBOURS.size());
-        for (final BlockFace blockFace : ATTACHED_NEIGHBOURS)
-        {
-            final Block block = originBlock.getRelative(blockFace);
-            final Material blockType = block.getType();
-
-            if (ProtectedMaterials.isProtectedMaterial(blockType))
-            {
-                protectableBlocks.add(block);
-            }
-        }
-
-        return Collections.unmodifiableList(protectableBlocks);
-    }
-
-    @Override
     public List<Block> getProtectedBlocks(final Block originBlock, final int distance)
     {
         final int length = (distance * 2) + 1;
@@ -309,6 +278,35 @@ public class ProtectionManagerImpl implements ProtectionManager
     // Non-Public Field(s).
     ///////////////////////////////////////////////////////////////////////////
 
+    private List<Block> getAttachedProtectableBlocks(final Block originBlock)
+    {
+        final List<Block> protectableBlocks = new ArrayList<>(ATTACHED_NEIGHBOURS.size());
+        for (final BlockFace blockFace : ATTACHED_NEIGHBOURS)
+        {
+            final Block block = originBlock.getRelative(blockFace);
+            final Material blockType = block.getType();
+
+            if (ProtectedMaterials.isProtectedMaterial(blockType))
+            {
+                protectableBlocks.add(block);
+            }
+        }
+
+        return Collections.unmodifiableList(protectableBlocks);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Non-Public Field(s).
+    ///////////////////////////////////////////////////////////////////////////
+
+    private final static List<BlockFace> ATTACHED_NEIGHBOURS = Collections.unmodifiableList(
+            Arrays.asList(
+                    BlockFace.NORTH,
+                    BlockFace.EAST,
+                    BlockFace.SOUTH,
+                    BlockFace.WEST,
+                    BlockFace.UP,
+                    BlockFace.DOWN));
     private final static int BLOCK_COUNT_BEFORE_ACTIVATION = 128;
     private final ProtectionDatabase m_database;
     private final PluginLogger m_logger;

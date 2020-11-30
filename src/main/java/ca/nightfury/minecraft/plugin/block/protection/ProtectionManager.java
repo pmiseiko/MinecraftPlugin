@@ -15,7 +15,5 @@ public interface ProtectionManager extends ProtectionDatabase
 
     Set<Block> getAttachedProtectableBlocks(final Block originBlock, final int limit);
 
-    List<Block> getAttachedProtectableBlocks(final Block originBlock);
-
     List<Block> getProtectedBlocks(final Block originBlock, final int distance);
 }

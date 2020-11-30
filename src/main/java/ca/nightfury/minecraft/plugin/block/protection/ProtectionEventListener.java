@@ -2,6 +2,7 @@ package ca.nightfury.minecraft.plugin.block.protection;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -161,31 +162,40 @@ public class ProtectionEventListener implements Listener
 
         m_scheduler.scheduleSyncDelayedTask(m_plugin, () ->
         {
-            for (final BlockFace currentBlockDirection : ProtectionManagerImpl.ATTACHED_NEIGHBOURS)
+            final List<Block> neighbourBlocks = new LinkedList<>();
+
+            neighbourBlocks.add(block);
+            neighbourBlocks.add(block.getRelative(BlockFace.NORTH));
+            neighbourBlocks.add(block.getRelative(BlockFace.EAST));
+            neighbourBlocks.add(block.getRelative(BlockFace.SOUTH));
+            neighbourBlocks.add(block.getRelative(BlockFace.WEST));
+            neighbourBlocks.add(block.getRelative(BlockFace.UP).getRelative(BlockFace.UP));
+            neighbourBlocks.add(block.getRelative(BlockFace.UP));
+            neighbourBlocks.add(block.getRelative(BlockFace.DOWN));
+
+            for (final Block neighbourBlock : neighbourBlocks)
             {
-                final Block attachedBlock = block.getRelative(currentBlockDirection);
-                final BlockIdentity attachedBlockIdentity = new BlockIdentity(attachedBlock);
-
-                if (m_manager.isBlockOwned(attachedBlockIdentity))
+                final BlockIdentity neighbourBlockIdentity = new BlockIdentity(neighbourBlock);
+                if (m_manager.isBlockOwned(neighbourBlockIdentity))
                 {
-                    final Material attachedBlockActualType = attachedBlock.getType();
-                    final Material attachedBlockExpectType = m_manager.getBlockType(attachedBlockIdentity);
+                    final Material neighbourBlockActualType = neighbourBlock.getType();
+                    final Material neighbourBlockExpectType = m_manager.getBlockType(neighbourBlockIdentity);
 
-                    if (!Objects.equals(attachedBlockActualType, attachedBlockExpectType))
+                    if (!Objects.equals(neighbourBlockActualType, neighbourBlockExpectType))
                     {
-                        final World attachedBlockWorld = block.getWorld();
+                        final World neighbourBlockWorld = block.getWorld();
 
-                        m_manager.deleteBlockOwner(attachedBlockIdentity);
+                        m_manager.deleteBlockOwner(neighbourBlockIdentity);
                         m_logger.info(
                                 String.format(
                                         "%s[%s] unregistered %s in %s at %d/%d/%d because of %s in %s at %d/%d/%d",
                                         player.getName(),
                                         player.getUniqueId(),
-                                        attachedBlockExpectType,
-                                        attachedBlockWorld.getName(),
-                                        attachedBlock.getX(),
-                                        attachedBlock.getY(),
-                                        attachedBlock.getZ(),
+                                        neighbourBlockExpectType,
+                                        neighbourBlockWorld.getName(),
+                                        neighbourBlock.getX(),
+                                        neighbourBlock.getY(),
+                                        neighbourBlock.getZ(),
                                         blockType,
                                         world.getName(),
                                         block.getX(),
@@ -194,7 +204,7 @@ public class ProtectionEventListener implements Listener
                     }
                 }
             }
-        }, 1);
+        }, NEIGHBOUR_BLOCK_CHECK_DELAY);
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
@@ -608,6 +618,7 @@ public class ProtectionEventListener implements Listener
 
     private final static Material MAIN_HAND_BLOCK_DEBUG_MATERIAL = Material.STICK;
     private final static int PLAYER_PROTECTED_BLOCK_MESSAGE_DELAY = 100;
+    private final static int NEIGHBOUR_BLOCK_CHECK_DELAY = 10;
     private final Map<UUID, Integer> m_playerPendingProtectedBlockMessage = new HashMap<>();
     private final Map<UUID, Set<Block>> m_playerPendingProtectedBlocks = new HashMap<>();
     private final BukkitScheduler m_scheduler;
