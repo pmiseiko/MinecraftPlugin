@@ -4,10 +4,8 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.Flushable;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 
 import org.bukkit.Server;
@@ -19,7 +17,6 @@ import org.bukkit.plugin.PluginLogger;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import ca.nightfury.minecraft.plugin.block.protection.DatabaseMigrator;
 import ca.nightfury.minecraft.plugin.block.protection.ProtectionDatabase;
 import ca.nightfury.minecraft.plugin.block.protection.ProtectionDatabaseImpl;
 import ca.nightfury.minecraft.plugin.block.protection.ProtectionEventListener;
@@ -29,7 +26,6 @@ import ca.nightfury.minecraft.plugin.block.rewards.RewardDatabase;
 import ca.nightfury.minecraft.plugin.block.rewards.RewardDatabaseImpl;
 import ca.nightfury.minecraft.plugin.block.rewards.RewardEventListener;
 import ca.nightfury.minecraft.plugin.block.tombstone.TombstoneEventListener;
-import ca.nightfury.minecraft.plugin.database.BlockIdentity;
 import ca.nightfury.minecraft.plugin.entity.squids.SquidEventListener;
 import ca.nightfury.minecraft.plugin.inventory.autoreplace.AutoReplaceEventListener;
 import ca.nightfury.minecraft.plugin.news.NewsEventListener;
@@ -59,34 +55,6 @@ public class Main extends JavaPlugin
 
         m_closeables.add(protectionDatabase);
         m_flushables.add(protectionDatabase);
-
-        try
-        {
-            final Set<BlockIdentity> ownedBlocks = protectionDatabase.getOwnedBlocks();
-            if (ownedBlocks.isEmpty())
-            {
-                m_logger.info("Migrating database.");
-
-                try (final DatabaseMigrator migrator = new DatabaseMigrator(dataFolder, m_logger))
-                {
-                    migrator.migrate(protectionDatabase);
-                }
-                catch (final IOException exception)
-                {
-                    m_logger.log(Level.SEVERE, "Failure while closing old database", exception);
-                }
-
-                m_logger.info("Migration complete.");
-            }
-            else
-            {
-                m_logger.info("Skip database migration.");
-            }
-        }
-        catch (final SQLException exception)
-        {
-            m_logger.log(Level.SEVERE, "Failure while reading old database", exception);
-        }
 
         final Server server = getServer();
 
