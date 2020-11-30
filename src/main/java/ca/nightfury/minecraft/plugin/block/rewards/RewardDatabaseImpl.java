@@ -3,9 +3,11 @@ package ca.nightfury.minecraft.plugin.block.rewards;
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.bukkit.plugin.PluginLogger;
 import org.mapdb.DB;
+import org.mapdb.DB.HashSetMaker;
 import org.mapdb.DBMaker;
 import org.mapdb.DBMaker.Maker;
 
@@ -28,7 +30,13 @@ public class RewardDatabaseImpl implements RewardDatabase
         dbMaker.fileMmapEnableIfSupported();
 
         m_database = dbMaker.make();
-        m_rewardedBlocks = m_database.hashSet("RewardedBlocks", BlockIdentitySerializer.SINGLETON).createOrOpen();
+
+        final HashSetMaker<BlockIdentity> rewardedBlocksMaker =
+                m_database.hashSet("RewardedBlocks", BlockIdentitySerializer.SINGLETON);
+
+        rewardedBlocksMaker.expireAfterCreate(1, TimeUnit.DAYS);
+
+        m_rewardedBlocks = rewardedBlocksMaker.createOrOpen();
         m_logger = logger;
         m_logger.info(String.format("Rewarded Block(s): %d", m_rewardedBlocks.size()));
     }
