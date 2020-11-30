@@ -25,13 +25,13 @@ import ca.nightfury.minecraft.plugin.block.protection.ProtectionManagerImpl;
 import ca.nightfury.minecraft.plugin.block.rewards.RewardDatabase;
 import ca.nightfury.minecraft.plugin.block.rewards.RewardDatabaseImpl;
 import ca.nightfury.minecraft.plugin.block.rewards.RewardEventListener;
-import ca.nightfury.minecraft.plugin.block.tombstone.TombstoneEventListener;
 import ca.nightfury.minecraft.plugin.entity.squids.SquidEventListener;
 import ca.nightfury.minecraft.plugin.inventory.autoreplace.AutoReplaceEventListener;
 import ca.nightfury.minecraft.plugin.news.NewsEventListener;
 import ca.nightfury.minecraft.plugin.player.hearth.HearthCommandHandler;
 import ca.nightfury.minecraft.plugin.player.hearth.HearthDatabase;
 import ca.nightfury.minecraft.plugin.player.hearth.HearthDatabaseImpl;
+import ca.nightfury.minecraft.plugin.player.tombstone.TombstoneEventListener;
 
 public class Main extends JavaPlugin
 {

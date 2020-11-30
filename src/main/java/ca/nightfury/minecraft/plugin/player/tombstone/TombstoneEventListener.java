@@ -1,4 +1,4 @@
-package ca.nightfury.minecraft.plugin.block.tombstone;
+package ca.nightfury.minecraft.plugin.player.tombstone;
 
 import java.util.Collection;
 import java.util.Map;
