@@ -2,6 +2,7 @@ package ca.nightfury.minecraft.plugin.block.protection;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
@@ -85,7 +86,9 @@ public class ProtectionDatabaseImpl implements ProtectionDatabase
                                 xCoordinate,
                                 yCoordinate,
                                 zCoordinate));
+
                 deleteBlockOwner(blockIdentity);
+                deleteBlockType(blockIdentity);
             }
             else if (!ProtectedMaterials.isProtectedMaterial(worldBlockType))
             {
@@ -97,9 +100,10 @@ public class ProtectionDatabaseImpl implements ProtectionDatabase
                                 xCoordinate,
                                 yCoordinate,
                                 zCoordinate));
-                deleteBlockOwner(blockIdentity);
-            }
 
+                deleteBlockOwner(blockIdentity);
+                deleteBlockType(blockIdentity);
+            }
             else if (!Objects.equals(worldBlockType, databaseBlockType))
             {
                 m_logger.warning(
@@ -111,7 +115,39 @@ public class ProtectionDatabaseImpl implements ProtectionDatabase
                                 zCoordinate,
                                 worldBlockType,
                                 databaseBlockType));
+
                 deleteBlockOwner(blockIdentity);
+                deleteBlockType(blockIdentity);
+            }
+        }
+
+        final Map<BlockIdentity, Material> blockTypes = getBlockTypes();
+        for (final BlockIdentity blockIdentity : blockTypes.keySet())
+        {
+            final UUID worldUUID = blockIdentity.getWorldUUID();
+            final int xCoordinate = blockIdentity.getXCoordinate();
+            final int yCoordinate = blockIdentity.getYCoordinate();
+            final int zCoordinate = blockIdentity.getZCoordinate();
+
+            final World world = server.getWorld(worldUUID);
+            final String worldName = world.getName();
+            final Block worldBlock = world.getBlockAt(xCoordinate, yCoordinate, zCoordinate);
+            final Material worldBlockType = worldBlock.getType();
+            final Material databaseBlockType = getBlockType(blockIdentity);
+
+            if (!isBlockOwned(blockIdentity))
+            {
+                m_logger.warning(
+                        String.format(
+                                "Database inconsistent for block type %s in %s at %d/%d/%d != protected",
+                                worldName,
+                                xCoordinate,
+                                yCoordinate,
+                                zCoordinate,
+                                worldBlockType,
+                                databaseBlockType));
+
+                deleteBlockType(blockIdentity);
             }
         }
     }
@@ -153,6 +189,12 @@ public class ProtectionDatabaseImpl implements ProtectionDatabase
     }
 
     @Override
+    public Map<BlockIdentity, Material> getBlockTypes()
+    {
+        return new HashMap<>(m_blockType);
+    }
+
+    @Override
     public Material getBlockType(final BlockIdentity blockIdentity)
     {
         return m_blockType.get(blockIdentity);
@@ -162,6 +204,12 @@ public class ProtectionDatabaseImpl implements ProtectionDatabase
     public void setBlockType(final BlockIdentity blockIdentity, final Material material)
     {
         m_blockType.put(blockIdentity, material);
+    }
+
+    @Override
+    public void deleteBlockType(final BlockIdentity blockIdentity)
+    {
+        m_blockType.remove(blockIdentity);
     }
 
     ///////////////////////////////////////////////////////////////////////////

@@ -141,6 +141,8 @@ public class ProtectionEventListener implements Listener
             if (m_manager.isBlockOwner(blockIdentity, playerIdentity))
             {
                 m_manager.deleteBlockOwner(blockIdentity);
+                m_manager.deleteBlockType(blockIdentity);
+
                 m_logger.info(
                         String.format(
                                 "%s[%s] unregistered %s in %s at %d/%d/%d",
@@ -186,6 +188,8 @@ public class ProtectionEventListener implements Listener
                         final World neighbourBlockWorld = block.getWorld();
 
                         m_manager.deleteBlockOwner(neighbourBlockIdentity);
+                        m_manager.deleteBlockType(neighbourBlockIdentity);
+
                         m_logger.info(
                                 String.format(
                                         "%s[%s] unregistered %s in %s at %d/%d/%d because of %s in %s at %d/%d/%d",
@@ -312,12 +316,17 @@ public class ProtectionEventListener implements Listener
             for (final Block protectableBlock : protectableBlocks)
             {
                 final BlockIdentity protectableBlockIdentity = new BlockIdentity(protectableBlock);
+                final Material protectableBlockType = protectableBlock.getType();
+
                 if (m_manager.isBlockOwned(protectableBlockIdentity))
                 {
                     if (!m_manager.isBlockOwner(protectableBlockIdentity, playerIdentity))
                     {
                         m_manager.deleteBlockOwner(protectableBlockIdentity);
+                        m_manager.deleteBlockType(protectableBlockIdentity);
                         m_manager.createBlockOwner(protectableBlockIdentity, playerIdentity);
+                        m_manager.setBlockType(protectableBlockIdentity, protectableBlockType);
+
                         m_logger.info(
                                 String.format(
                                         "%s[%s] overwrote registration of %s in %s at %d/%d/%d",
@@ -335,6 +344,8 @@ public class ProtectionEventListener implements Listener
                 else
                 {
                     m_manager.createBlockOwner(protectableBlockIdentity, playerIdentity);
+                    m_manager.setBlockType(protectableBlockIdentity, protectableBlockType);
+
                     m_logger.info(
                             String.format(
                                     "%s[%s] registered %s in %s at %d/%d/%d",

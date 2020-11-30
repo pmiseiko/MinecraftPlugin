@@ -2,6 +2,7 @@ package ca.nightfury.minecraft.plugin.block.protection;
 
 import java.io.Closeable;
 import java.io.Flushable;
+import java.util.Map;
 import java.util.Set;
 
 import org.bukkit.Material;
@@ -26,7 +27,11 @@ public interface ProtectionDatabase extends Flushable, Closeable
 
     boolean isBlockOwner(final BlockIdentity blockIdentity, final PlayerIdentity playerIdentity);
 
+    Map<BlockIdentity, Material> getBlockTypes();
+
     Material getBlockType(final BlockIdentity blockIdentity);
 
     void setBlockType(final BlockIdentity blockIdentity, final Material material);
+
+    void deleteBlockType(final BlockIdentity blockIdentity);
 }

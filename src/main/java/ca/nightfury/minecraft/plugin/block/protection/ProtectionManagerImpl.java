@@ -84,6 +84,7 @@ public class ProtectionManagerImpl implements ProtectionManager
                                         protectableBlock.getZ()));
 
                         m_database.deleteBlockOwner(protectableBlockIdentity);
+                        m_database.deleteBlockType(protectableBlockIdentity);
                     }
                 }
             }
@@ -108,7 +109,11 @@ public class ProtectionManagerImpl implements ProtectionManager
                     }
                     else
                     {
+                        final Material protectableBlockType = protectableBlock.getType();
+
                         m_database.createBlockOwner(protectableBlockIdentity, playerIdentity);
+                        m_database.setBlockType(protectableBlockIdentity, protectableBlockType);
+
                         m_logger.info(
                                 String.format(
                                         "Protection added for %s at block %s in %s at %d/%d/%d",
