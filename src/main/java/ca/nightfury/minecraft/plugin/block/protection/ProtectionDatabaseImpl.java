@@ -36,7 +36,6 @@ public class ProtectionDatabaseImpl implements ProtectionDatabase
         final File dbFile = new File(dataFolder, BLOCK_OWNERSHIP_DATABASE_FILENAME);
         final Maker dbMaker = DBMaker.fileDB(dbFile);
 
-        dbMaker.closeOnJvmShutdown();
         dbMaker.concurrencyDisable();
         dbMaker.fileMmapEnableIfSupported();
 

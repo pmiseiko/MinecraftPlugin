@@ -25,7 +25,6 @@ public class RewardDatabaseImpl implements RewardDatabase
         final File dbFile = new File(dataFolder, DATABASE_FILE_NAME);
         final Maker dbMaker = DBMaker.fileDB(dbFile);
 
-        dbMaker.closeOnJvmShutdown();
         dbMaker.concurrencyDisable();
         dbMaker.fileMmapEnableIfSupported();
 
