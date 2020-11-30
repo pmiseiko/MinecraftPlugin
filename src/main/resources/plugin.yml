@@ -4,6 +4,6 @@ version: 0.1.0
 main: ca.nightfury.minecraft.plugin.Main
 commands:
  hearth:
-  description: Teleport back to your bed.
+  description: Teleport back to a bed spawn location if set otherwise does nothing.  Can only be used once per day.
   aliases: [hearth]
   usage: /hearth
