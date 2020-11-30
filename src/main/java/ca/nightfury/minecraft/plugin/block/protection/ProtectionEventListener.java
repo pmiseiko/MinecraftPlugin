@@ -628,8 +628,8 @@ public class ProtectionEventListener implements Listener
     ///////////////////////////////////////////////////////////////////////////
 
     private final static Material MAIN_HAND_BLOCK_DEBUG_MATERIAL = Material.STICK;
-    private final static int PLAYER_PROTECTED_BLOCK_MESSAGE_DELAY = 100;
-    private final static int NEIGHBOUR_BLOCK_CHECK_DELAY = 10;
+    private final static int PLAYER_PROTECTED_BLOCK_MESSAGE_DELAY = 70; // 3.5s
+    private final static int NEIGHBOUR_BLOCK_CHECK_DELAY = 2; // 0.1s
     private final Map<UUID, Integer> m_playerPendingProtectedBlockMessage = new HashMap<>();
     private final Map<UUID, Set<Block>> m_playerPendingProtectedBlocks = new HashMap<>();
     private final BukkitScheduler m_scheduler;
