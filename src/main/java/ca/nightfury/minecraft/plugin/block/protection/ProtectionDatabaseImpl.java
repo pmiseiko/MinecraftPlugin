@@ -133,19 +133,17 @@ public class ProtectionDatabaseImpl implements ProtectionDatabase
             final String worldName = world.getName();
             final Block worldBlock = world.getBlockAt(xCoordinate, yCoordinate, zCoordinate);
             final Material worldBlockType = worldBlock.getType();
-            final Material databaseBlockType = getBlockType(blockIdentity);
 
             if (!isBlockOwned(blockIdentity))
             {
                 m_logger.warning(
                         String.format(
                                 "Database inconsistent for block type %s in %s at %d/%d/%d != protected",
+                                worldBlockType,
                                 worldName,
                                 xCoordinate,
                                 yCoordinate,
-                                zCoordinate,
-                                worldBlockType,
-                                databaseBlockType));
+                                zCoordinate));
 
                 deleteBlockType(blockIdentity);
             }
