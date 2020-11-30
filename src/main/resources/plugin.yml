@@ -2,3 +2,8 @@ name: MinecraftPlugin
 api-version: 1.16
 version: 0.1.0
 main: ca.nightfury.minecraft.plugin.Main
+commands:
+	hearth:
+		description: Teleport back to your bed.
+		aliases: [hearth]
+		usage: /hearth
