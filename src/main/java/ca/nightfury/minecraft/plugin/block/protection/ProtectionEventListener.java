@@ -171,7 +171,7 @@ public class ProtectionEventListener implements Listener
                     final Material attachedBlockActualType = attachedBlock.getType();
                     final Material attachedBlockExpectType = m_manager.getBlockType(attachedBlockIdentity);
 
-                    if (Objects.equals(attachedBlockActualType, attachedBlockExpectType))
+                    if (!Objects.equals(attachedBlockActualType, attachedBlockExpectType))
                     {
                         final World attachedBlockWorld = block.getWorld();
 
