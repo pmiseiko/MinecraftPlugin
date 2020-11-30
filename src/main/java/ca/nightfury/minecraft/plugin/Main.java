@@ -11,6 +11,8 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import org.bukkit.Server;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginLogger;
@@ -32,6 +34,8 @@ import ca.nightfury.minecraft.plugin.entity.squids.SquidEventListener;
 import ca.nightfury.minecraft.plugin.inventory.autoreplace.AutoReplaceEventListener;
 import ca.nightfury.minecraft.plugin.news.NewsEventListener;
 import ca.nightfury.minecraft.plugin.player.hearth.HearthCommandHandler;
+import ca.nightfury.minecraft.plugin.player.hearth.HearthDatabase;
+import ca.nightfury.minecraft.plugin.player.hearth.HearthDatabaseImpl;
 
 public class Main extends JavaPlugin
 {
@@ -108,7 +112,11 @@ public class Main extends JavaPlugin
             m_logger.info(String.format("Registered event listener: %s", listener));
         }
 
-        getCommand("hearth").setExecutor(new HearthCommandHandler());
+        final HearthDatabase hearthDatabase = new HearthDatabaseImpl(dataFolder, m_logger);
+        final CommandExecutor hearthCommandHandler = new HearthCommandHandler(hearthDatabase, server, m_logger);
+        final PluginCommand pluginCommand = getCommand("hearth");
+
+        pluginCommand.setExecutor(hearthCommandHandler);
     }
 
     @Override
