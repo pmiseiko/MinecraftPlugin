@@ -57,6 +57,9 @@ public class Main extends JavaPlugin
         final ProtectionDatabase protectionDatabase = new ProtectionDatabaseImpl(dataFolder, m_logger);
         final ProtectionManager protectionManager = new ProtectionManagerImpl(protectionDatabase, m_logger);
 
+        m_closeables.add(protectionDatabase);
+        m_flushables.add(protectionDatabase);
+
         try
         {
             final Set<BlockIdentity> ownedBlocks = protectionDatabase.getOwnedBlocks();
@@ -85,9 +88,6 @@ public class Main extends JavaPlugin
             m_logger.log(Level.SEVERE, "Failure while reading old database", exception);
         }
 
-        m_closeables.add(protectionDatabase);
-        m_flushables.add(protectionDatabase);
-
         final Server server = getServer();
 
         protectionDatabase.integrityCheck(server);
@@ -113,6 +113,10 @@ public class Main extends JavaPlugin
         }
 
         final HearthDatabase hearthDatabase = new HearthDatabaseImpl(dataFolder, m_logger);
+
+        m_closeables.add(hearthDatabase);
+        m_flushables.add(hearthDatabase);
+
         final CommandExecutor hearthCommandHandler = new HearthCommandHandler(hearthDatabase, server, m_logger);
         final PluginCommand pluginCommand = getCommand("hearth");
 
