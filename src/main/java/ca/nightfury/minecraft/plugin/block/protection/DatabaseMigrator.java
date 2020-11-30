@@ -45,6 +45,9 @@ public class DatabaseMigrator implements Flushable, Closeable
     public void migrate(final ProtectionDatabase newDatabase)
     {
         final Map<BlockIdentity, PlayerIdentity> blockOwners = getBlockOwners();
+
+        m_logger.info(String.format("Old database had %d owned blocks", blockOwners.size()));
+
         for (final Entry<BlockIdentity, PlayerIdentity> entry : blockOwners.entrySet())
         {
             final BlockIdentity blockIdentity = entry.getKey();
