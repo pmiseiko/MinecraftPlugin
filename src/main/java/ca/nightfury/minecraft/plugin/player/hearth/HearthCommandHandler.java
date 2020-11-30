@@ -29,7 +29,7 @@ public class HearthCommandHandler implements CommandExecutor
     ///////////////////////////////////////////////////////////////////////////
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
+    public boolean onCommand(final CommandSender sender, final Command command, final String label, final String[] args)
     {
         final String commandName = command.getName().toLowerCase();
         switch (commandName)

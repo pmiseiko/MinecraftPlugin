@@ -7,12 +7,10 @@ import java.util.concurrent.TimeUnit;
 
 import org.bukkit.plugin.PluginLogger;
 import org.mapdb.DB;
-import org.mapdb.DBMaker;
 import org.mapdb.DB.HashSetMaker;
+import org.mapdb.DBMaker;
 import org.mapdb.DBMaker.Maker;
 
-import ca.nightfury.minecraft.plugin.database.BlockIdentity;
-import ca.nightfury.minecraft.plugin.database.BlockIdentitySerializer;
 import ca.nightfury.minecraft.plugin.database.PlayerIdentity;
 import ca.nightfury.minecraft.plugin.database.PlayerIdentitySerializer;
 

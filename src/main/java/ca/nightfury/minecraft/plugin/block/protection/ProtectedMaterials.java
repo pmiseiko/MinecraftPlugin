@@ -114,6 +114,15 @@ public class ProtectedMaterials
             case QUARTZ_BLOCK:
             case NETHERITE_BLOCK:
 
+            case ACACIA_PLANKS:
+            case BIRCH_PLANKS:
+            case CRIMSON_PLANKS:
+            case DARK_OAK_PLANKS:
+            case JUNGLE_PLANKS:
+            case OAK_PLANKS:
+            case SPRUCE_PLANKS:
+            case WARPED_PLANKS:
+
             case ACACIA_SLAB:
             case ANDESITE_SLAB:
             case BIRCH_SLAB:
