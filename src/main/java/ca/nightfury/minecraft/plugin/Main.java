@@ -19,6 +19,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import ca.nightfury.minecraft.plugin.block.protection.BlockManager;
 import ca.nightfury.minecraft.plugin.block.protection.DatabaseCache;
 import ca.nightfury.minecraft.plugin.block.protection.DatabaseManager;
+import ca.nightfury.minecraft.plugin.block.protection.DatabaseManager2;
 import ca.nightfury.minecraft.plugin.block.protection.ProtectionEventListener;
 import ca.nightfury.minecraft.plugin.block.rewards.RewardEventListener;
 import ca.nightfury.minecraft.plugin.block.tombstone.TombstoneEventListener;
@@ -45,7 +46,7 @@ public class Main extends JavaPlugin
 
         try
         {
-            final DatabaseManager databaseManager = new DatabaseManager(dataFolder, m_logger);
+            final DatabaseManager2 databaseManager = new DatabaseManager2(dataFolder, m_logger);
             final Server server = getServer();
 
             databaseManager.integrityCheck(server);
