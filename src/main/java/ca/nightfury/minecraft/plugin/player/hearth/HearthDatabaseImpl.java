@@ -34,6 +34,7 @@ public class HearthDatabaseImpl implements HearthDatabase
                 m_database.hashSet("HearthDisabled", PlayerIdentitySerializer.SINGLETON);
 
         hearthDisabledMaker.expireAfterCreate(1, TimeUnit.DAYS);
+        hearthDisabledMaker.expireAfterCreate();
 
         m_hearthDisabled = hearthDisabledMaker.createOrOpen();
         m_logger = logger;
