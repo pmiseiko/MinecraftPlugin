@@ -597,18 +597,26 @@ public class ProtectionEventListener implements Listener
     public void onStructureGrowEvent(final StructureGrowEvent event)
     {
         final List<BlockState> blockStates = event.getBlocks();
-        final Player player = event.getPlayer();
-        final PlayerIdentity playerIdentity = new PlayerIdentity(player);
-
         for (final BlockState blockState : blockStates)
         {
             final Block block = blockState.getBlock();
             final BlockIdentity blockIdentity = new BlockIdentity(block);
 
-            if (m_manager.isBlockOwned(blockIdentity) &&
-                    ((player == null) || !m_manager.isBlockOwner(blockIdentity, playerIdentity)))
+            if (m_manager.isBlockOwned(blockIdentity))
             {
-                event.setCancelled(true);
+                final Player player = event.getPlayer();
+                if (player == null)
+                {
+                    event.setCancelled(true);
+                }
+                else
+                {
+                    final PlayerIdentity playerIdentity = new PlayerIdentity(player);
+                    if (!m_manager.isBlockOwner(blockIdentity, playerIdentity))
+                    {
+                        event.setCancelled(true);
+                    }
+                }
             }
         }
     }
