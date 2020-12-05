@@ -305,7 +305,7 @@ public class ProtectionEventListener implements Listener
         }
 
         final int minimumAttachedProtectableBlocksBeforeProtectionActivation =
-                m_manager.getMinimumAttachedProtectableBlocksBeforeProtectionActivation();
+                m_manager.getMinimumProtectableBlocksBeforeProtectionActivation();
         final Set<Block> protectableBlocks = m_manager.getAttachedProtectableBlocks(
                 block,
                 minimumAttachedProtectableBlocksBeforeProtectionActivation);

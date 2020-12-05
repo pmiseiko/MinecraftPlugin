@@ -1,6 +1,5 @@
 package ca.nightfury.minecraft.plugin.block.rewards;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -20,10 +19,9 @@ public class RewardDatabaseImpl implements RewardDatabase
     // Public Method(s).
     ///////////////////////////////////////////////////////////////////////////
 
-    public RewardDatabaseImpl(final File dataFolder, final PluginLogger logger)
+    public RewardDatabaseImpl(final PluginLogger logger)
     {
-        final File dbFile = new File(dataFolder, DATABASE_FILE_NAME);
-        final Maker dbMaker = DBMaker.fileDB(dbFile);
+        final Maker dbMaker = DBMaker.memoryDB();
 
         dbMaker.concurrencyDisable();
         dbMaker.fileMmapEnableIfSupported();
@@ -82,7 +80,6 @@ public class RewardDatabaseImpl implements RewardDatabase
     // Non-Public Field(s).
     ///////////////////////////////////////////////////////////////////////////
 
-    private final static String DATABASE_FILE_NAME = "rewarded_blocks.db";
     private final DB m_database;
     private final Set<BlockIdentity> m_rewardedBlocks;
     private final PluginLogger m_logger;

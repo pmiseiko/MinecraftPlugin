@@ -68,7 +68,7 @@ public class ProtectionManagerImpl implements ProtectionManager
                 blocksChecked.add(protectableBlockIdentity);
             }
 
-            if (protectableBlocks.size() < BLOCK_COUNT_BEFORE_ACTIVATION)
+            if (protectableBlocks.size() < getMinimumProtectableBlocksBeforeProtectionActivation())
             {
                 for (final Block protectableBlock : protectableBlocks)
                 {
@@ -131,9 +131,9 @@ public class ProtectionManagerImpl implements ProtectionManager
     }
 
     @Override
-    public int getMinimumAttachedProtectableBlocksBeforeProtectionActivation()
+    public int getMinimumProtectableBlocksBeforeProtectionActivation()
     {
-        return BLOCK_COUNT_BEFORE_ACTIVATION;
+        return MINIMUM_PROTECTABLE_BLOCKS_BEFORE_PROTECTION_ACTIVATION;
     }
 
     @Override
@@ -325,7 +325,7 @@ public class ProtectionManagerImpl implements ProtectionManager
                     BlockFace.WEST,
                     BlockFace.UP,
                     BlockFace.DOWN));
-    private final static int BLOCK_COUNT_BEFORE_ACTIVATION = 128;
+    private final static int MINIMUM_PROTECTABLE_BLOCKS_BEFORE_PROTECTION_ACTIVATION = 128;
     private final ProtectionDatabase m_database;
     private final PluginLogger m_logger;
 }

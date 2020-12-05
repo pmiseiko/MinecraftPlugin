@@ -11,7 +11,7 @@ public interface ProtectionManager extends ProtectionDatabase
     @Override
     void integrityCheck(final Server server);
 
-    int getMinimumAttachedProtectableBlocksBeforeProtectionActivation();
+    int getMinimumProtectableBlocksBeforeProtectionActivation();
 
     Set<Block> getAttachedProtectableBlocks(final Block originBlock, final int limit);
 

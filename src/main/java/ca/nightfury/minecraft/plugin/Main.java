@@ -61,7 +61,7 @@ public class Main extends JavaPlugin
         protectionDatabase.integrityCheck(server);
         protectionManager.integrityCheck(server);
 
-        final RewardDatabase rewardDatabase = new RewardDatabaseImpl(dataFolder, m_logger);
+        final RewardDatabase rewardDatabase = new RewardDatabaseImpl(m_logger);
 
         m_closeables.add(rewardDatabase);
         m_flushables.add(rewardDatabase);
