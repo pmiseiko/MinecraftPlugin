@@ -24,7 +24,6 @@ public class RewardDatabaseImpl implements RewardDatabase
         final Maker dbMaker = DBMaker.memoryDB();
 
         dbMaker.concurrencyDisable();
-        dbMaker.fileMmapEnableIfSupported();
 
         m_database = dbMaker.make();
 
